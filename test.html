@@ -50,6 +50,7 @@
       display: flex;
       justify-content: space-between;
       margin-top: 1rem;
+      gap: 0.5rem;
     }
     .button {
       padding: 0.5rem 1rem;
@@ -86,6 +87,11 @@
       color: red;
       font-weight: bold;
     }
+    .hint-info {
+      margin-left: 0.5rem;
+      color: #666;
+      font-size: 0.95em;
+    }
   </style>
 </head>
 <body>
@@ -97,6 +103,8 @@
 
     <div class="controls">
       <button class="button" onclick="prevQuestion()">上一题</button>
+      <button class="button" onclick="useHint()" id="hint-btn">提示</button>
+      <span class="hint-info" id="hint-info"></span>
       <button class="button" onclick="submitAnswer()">提交</button>
       <button class="button" onclick="nextQuestion()">下一题</button>
     </div>
@@ -107,25 +115,52 @@
   </div>
 
   <script>
-    // 判断字符是否是中文或英文字母（即“字符串”）
     function isStringChar(char) {
       return /[\u4e00-\u9fa5A-Za-z]/.test(char);
     }
 
-    // 原始数据
-     const questions = [ { answer: "君子绝交，不出恶声", meaning: "劝人要有君子风度，不讲别人坏话，不伤害别人。" }, { answer: "祸莫大于不知足", meaning: "劝人要知道满足，以免招来祸害" }, { answer: "不经一事，不长一智", meaning: "知识和智慧是由不断尝试累积的" }, { answer: "三人行,必有我师焉", meaning: "劝勉世人虚心向别人学习" }, { answer: "劝君莫打枝头鸟,子在巢中望母归。", meaning: "劝请世人要珍惜所有的生命" }, { answer: "己所不欲,勿施于人", meaning: "劝人要替人着想" }, { answer: "亡羊而补牢,未为迟也", meaning: "说明一旦发生差错，能及时补救,就还来得及。" }, { answer: "业精于勤,荒于嬉", meaning: "劝勉读书人应该用功,不可贪玩" }, { answer: "一日不见,如三秋兮。", meaning: "形容对一个人强烈的思念。" }, { answer: "投我以桃,报之以李。", meaning: "比喻礼尚往来" }, { answer: "敏而好学,不耻下问。", meaning: "形容谦虚好学的求学态度。" }, { answer: "温故而知新,可以为师矣。", meaning: "劝人应该常温习旧知识。" }, { answer: "名不正,则言不顺。", meaning: "说明“正名”的重要，也就是一个人要有明确的身份，才能令人信服他所做的事和所讲的话。" }, { answer: "一日暴之,十日寒之。", meaning: "比喻做事没有恒心，将难有所成。" }, { answer: "以子之矛,攻子之盾。", meaning: "比喻自相矛盾。" }, { answer: "口惠而实不至。", meaning: "形容空口说白话,没有信用。" }, { answer: "本是同根生，相煎何太急。", meaning: "形容骨肉相残。" }, { answer: "记人之善，忘人之过。", meaning: "劝人应宽宏大量。" }, { answer: "近朱者赤,近墨者黑。", meaning: "说明环境能影响一个人的习性。" }, { answer: "小时了了,大未必佳。", meaning: "比喻天生聪明的人还需后天的栽培,才能有杰出的表现。" }, { answer: "欲穷千里目,更上一层楼。", meaning: "比喻要取得更高的成就,就得奋发向上。" }, { answer: "慈母手中线,游子身上衣。", meaning: "描写母亲对子女无微不至的爱。" }, { answer: "谁知盘中餐，粒粒皆辛苦。", meaning: "劝勉人们应珍惜食物，不要随意浪费。" }, { answer: "清明时节雨纷纷，路上行人欲断魂。", meaning: "描写清明时节时思念故人的悲伤情景。" }, { answer: "一语为重百金轻。", meaning: "说明守诺的重要，劝勉人们 要守信用。" }, { answer: "路遥知马力，日久见人心。", meaning: "比喻要经过长时间的考验，才能看清一个人的本性。" }, { answer: "明日复明日，明日何其多！日日待明日，万事成蹉跎。", meaning: "劝勉人们应该养成今日事今日毕的好习惯，一味拖延只会误事。" }, { answer: "富贵本无根，尽从勤里得。", meaning: "说明天下没有不劳而获的东西，必须靠自己的双手努力去创造。" }, { answer: "人逢喜事精神爽，月到中秋分外明。", meaning: "形容人遇有喜事，精神将特别爽朗。" }, { answer: "尽得大的责任，就得大快乐；尽得小的责任，就得小快乐。", meaning: "劝勉人们凡事必须尽责，才能从中获得快乐" } ];
-
+    const questions = [
+      { answer: "君子绝交，不出恶声", meaning: "劝人要有君子风度，不讲别人坏话，不伤害别人。" },
+      { answer: "祸莫大于不知足", meaning: "劝人要知道满足，以免招来祸害" },
+      { answer: "不经一事，不长一智", meaning: "知识和智慧是由不断尝试累积的" },
+      { answer: "三人行, 必有我师焉", meaning: "劝勉世人虚心向别人学习" },
+      { answer: "劝君莫打枝头鸟，子在巢中望母归。", meaning: "劝请世人要珍惜所有的生命" },
+      { answer: "己所不欲，勿施于人", meaning: "劝人要替人着想" },
+      { answer: "亡羊而补牢，未为迟也", meaning: "说明一旦发生差错，能及时补救，就还来得及。" },
+      { answer: "业精于勤, 荒于嬉", meaning: "劝勉读书人应该用功，不可贪玩" },
+      { answer: "一日不见，如三秋兮。", meaning: "形容对一个人强烈的思念。" },
+      { answer: "投我以桃，报之以李。", meaning: "比喻礼尚往来" },
+      { answer: "敏而好学，不耻下问。", meaning: "形容谦虚好学的求学态度。" },
+      { answer: "温故而知新，可以为师矣。", meaning: "劝人应该常温习旧知识。" },
+      { answer: "名不正，则言不顺。", meaning: "说明“正名”的重要，也就是一个人要有明确的身份，才能令人信服他所做的事和所讲的话。" },
+      { answer: "一日暴之，十日寒之。", meaning: "比喻做事没有恒心，将难有所成。" },
+      { answer: "以子之矛，攻子之盾。", meaning: "比喻自相矛盾。" },
+      { answer: "口惠而实不至。", meaning: "形容空口说白话，没有信用。" },
+      { answer: "本是同根生，相煎何太急。", meaning: "形容骨肉相残。" },
+      { answer: "记人之善，忘人之过。", meaning: "劝人应宽宏大量。" },
+      { answer: "近朱者赤，近墨者黑。", meaning: "说明环境能影响一个人的习性。" },
+      { answer: "小时了了，大未必佳。", meaning: "比喻天生聪明的人还需后天的栽培，才能有杰出的表现。" },
+      { answer: "欲穷千里目，更上一层楼。", meaning: "比喻要取得更高的成就，就得奋发向上。" },
+      { answer: "慈母手中线，游子身上衣。", meaning: "描写母亲对子女无微不至的爱。" },
+      { answer: "谁知盘中餐，粒粒皆辛苦。", meaning: "劝勉人们应珍惜食物，不要随意浪费。" },
+      { answer: "清明时节雨纷纷，路上行人欲断魂。", meaning: "描写清明时节时思念故人的悲伤情景。" },
+      { answer: "一语为重百金轻。", meaning: "说明守诺的重要，劝勉人们 要守信用。" },
+      { answer: "路遥知马力，日久见人心。", meaning: "比喻要经过长时间的考验，才能看清一个人的本性。" },
+      { answer: "明日复明日，明日何其多！日日待明日，万事成蹉跎。", meaning: "劝勉人们应该养成今日事今日毕的好习惯，一味拖延只会误事。" },
+      { answer: "富贵本无根，尽从勤里得。", meaning: "说明天下没有不劳而获的东西，必须靠自己的双手努力去创造。" },
+      { answer: "人逢喜事精神爽，月到中秋分外明。", meaning: "形容人遇有喜事，精神将特别爽朗。" },
+      { answer: "尽得大的责任，就得大快乐；尽得小的责任，就得小快乐。", meaning: "劝勉人们凡事必须尽责，才能从中获得快乐" }
+    ];
 
     let quiz = [];
     let current = 0;
     const userAnswers = [];
     const shuffledChoices = [];
+    const hintsUsed = [];
 
     function shuffle(arr) {
       return [...arr].sort(() => Math.random() - 0.5);
     }
-
-    // 只选“字符串”干扰项
     function getOtherChars(count, exclude) {
       const allChars = questions.flatMap(q => q.answer.split("").filter(isStringChar));
       const unique = [...new Set(allChars.filter(c => !exclude.includes(c)))];
@@ -137,109 +172,154 @@
       current = 0;
       userAnswers.length = 0;
       shuffledChoices.length = 0;
+      hintsUsed.length = 0;
       for (let q of quiz) {
         const chars = q.answer.split("");
         const stringChars = chars.filter(isStringChar);
         const extras = getOtherChars(stringChars.length, stringChars);
         shuffledChoices.push(shuffle([...stringChars, ...extras]));
+        hintsUsed.push([]);
       }
       document.getElementById("summary").style.display = "none";
       renderQuestion();
     }
 
-  function renderQuestion() {
-    const q = quiz[current];
-    const questionEl = document.getElementById("question");
-    const answerArea = document.getElementById("answer-area");
-    const wordBank = document.getElementById("word-bank");
-    const feedback = document.getElementById("feedback");
-    feedback.innerHTML = "";
-    questionEl.innerHTML = `<strong>题目 ${current + 1}：</strong> ${q.meaning}`;
-    answerArea.innerHTML = "";
-    wordBank.innerHTML = "";
+    function renderQuestion() {
+      const q = quiz[current];
+      const questionEl = document.getElementById("question");
+      const answerArea = document.getElementById("answer-area");
+      const wordBank = document.getElementById("word-bank");
+      const feedback = document.getElementById("feedback");
+      feedback.innerHTML = "";
+      questionEl.innerHTML = `<strong>题目 ${current + 1}：</strong> ${q.meaning}`;
+      answerArea.innerHTML = "";
+      wordBank.innerHTML = "";
 
-    // 准备答案分解，每一个字符都要渲染一个slot
-    const chars = q.answer.split("");
-    let selected = userAnswers[current]?.split("") || [];
-    let stringCharIndexes = [];
-    let selectIdx = 0;
+      const chars = q.answer.split("");
+      const stringChars = chars.filter(isStringChar);
 
-    chars.forEach((char, i) => {
-      if (isStringChar(char)) {
-        stringCharIndexes.push(i);
-      }
-    });
+      // Always treat userAnswers[current] as ARRAY
+      let selected = Array.isArray(userAnswers[current]) ? userAnswers[current].slice() : [];
+      while (selected.length < stringChars.length) selected.push("");
+      userAnswers[current] = selected.slice();
 
-    for (let i = 0; i < chars.length; i++) {
-      if (!isStringChar(chars[i])) {
-        // 不是字符串，直接填充且禁用
-        const slot = document.createElement("button");
-        slot.className = "slot-button";
-        slot.textContent = chars[i];
-        slot.disabled = true;
-        answerArea.appendChild(slot);
-      } else {
-        // 字符串字符，可填写
-        const slot = document.createElement("button");
-        slot.className = "slot-button";
-        slot.textContent = selected[selectIdx] || "";
-        const thisIdx = selectIdx;
-        slot.onclick = () => {
-          if (slot.textContent) {
-            shuffledChoices[current].push(slot.textContent);
-            selected.splice(thisIdx, 1);
-            userAnswers[current] = selected.join("");
-            renderQuestion();
+      // Draw answer slots
+      let slotStringCharIdx = 0;
+      for (let i = 0; i < chars.length; i++) {
+        if (!isStringChar(chars[i])) {
+          const slot = document.createElement("button");
+          slot.className = "slot-button";
+          slot.textContent = chars[i];
+          slot.disabled = true;
+          answerArea.appendChild(slot);
+        } else {
+          const slot = document.createElement("button");
+          slot.className = "slot-button";
+          slot.textContent = selected[slotStringCharIdx] || "";
+          const isHint = hintsUsed[current].includes(slotStringCharIdx);
+          if (isHint) {
+            slot.disabled = true;
+            slot.style.backgroundColor = "#b6fcd5";
+          } else {
+            const thisIdx = slotStringCharIdx;
+            slot.onclick = () => {
+              if (slot.textContent) {
+                selected[thisIdx] = "";
+                userAnswers[current] = selected.slice();
+                renderQuestion();
+              }
+            };
           }
-        };
-        answerArea.appendChild(slot);
-        selectIdx++;
+          answerArea.appendChild(slot);
+          slotStringCharIdx++;
+        }
       }
-    }
 
-    // 统计已选中各字符的数量
-    const selectedCount = {};
-    for (const c of selected) {
-      selectedCount[c] = (selectedCount[c] || 0) + 1;
-    }
-
-    // 统计词库所有字符的数量
-    const wordBankCount = {};
-    for (const c of shuffledChoices[current]) {
-      wordBankCount[c] = (wordBankCount[c] || 0) + 1;
-    }
-
-    // 渲染词库按钮，考虑重复字符
-    const displayCount = {}; // 用于计数已渲染的字符数
-    for (const char of shuffledChoices[current]) {
-      if (!isStringChar(char)) continue; // 防御性
-
-      const used = selectedCount[char] || 0;
-      displayCount[char] = (displayCount[char] || 0) + 1;
-
-      // 只显示没被选中的部分
-      if (displayCount[char] <= wordBankCount[char] - used) {
-        const btn = document.createElement("button");
-        btn.className = "word-button";
-        btn.textContent = char;
-        btn.onclick = () => {
-          if (selected.length < stringCharIndexes.length) {
-            selected.push(char);
-            userAnswers[current] = selected.join("");
-            renderQuestion();
-          }
-        };
-        wordBank.appendChild(btn);
+      // Frequency count in pool
+      const poolCount = {};
+      for (const c of shuffledChoices[current]) {
+        if (!isStringChar(c)) continue;
+        poolCount[c] = (poolCount[c] || 0) + 1;
       }
+      // Used count (answer slots)
+      const usedCount = {};
+      for (let i = 0; i < selected.length; i++) {
+        if (selected[i]) {
+          usedCount[selected[i]] = (usedCount[selected[i]] || 0) + 1;
+        }
+      }
+      // Used by hint
+      for (const idx of hintsUsed[current]) {
+        const hintChar = stringChars[idx];
+        usedCount[hintChar] = (usedCount[hintChar] || 0) + 1;
+      }
+      // Render word bank
+      const bankCharCount = {};
+      for (const char of shuffledChoices[current]) {
+        if (!isStringChar(char)) continue;
+        bankCharCount[char] = (bankCharCount[char] || 0) + 1;
+        const used = usedCount[char] || 0;
+        if (bankCharCount[char] <= poolCount[char] - used) {
+          const btn = document.createElement("button");
+          btn.className = "word-button";
+          btn.textContent = char;
+          btn.onclick = () => {
+            // Fill first empty slot
+            let idx = selected.findIndex(v => !v);
+            if (idx !== -1) {
+              selected[idx] = char;
+              userAnswers[current] = selected.slice(); // Always store array!
+              renderQuestion();
+            }
+          };
+          wordBank.appendChild(btn);
+        }
+      }
+
+      // Hint info and button
+      const hintBtn = document.getElementById("hint-btn");
+      const hintInfo = document.getElementById("hint-info");
+      const remainingHints = 3 - hintsUsed[current].length;
+      hintBtn.disabled = remainingHints <= 0 || isAnswerComplete();
+      hintInfo.textContent = `剩余提示：${remainingHints} 次`;
+
+      updateProgress();
     }
 
-    updateProgress();
-  }
+    function useHint() {
+      const q = quiz[current];
+      const stringChars = q.answer.split("").filter(isStringChar);
+      let selected = Array.isArray(userAnswers[current]) ? userAnswers[current].slice() : [];
+      while (selected.length < stringChars.length) selected.push("");
+      // Find all eligible hint slots
+      const eligible = [];
+      for (let i = 0; i < stringChars.length; i++) {
+        if (hintsUsed[current].includes(i)) continue;
+        if (selected[i] === stringChars[i]) continue;
+        eligible.push(i);
+      }
+      if (eligible.length === 0) return;
+      // Pick one randomly
+      const idx = eligible[Math.floor(Math.random() * eligible.length)];
+      hintsUsed[current].push(idx);
+      selected[idx] = stringChars[idx];
+      userAnswers[current] = selected.slice(); // Store as array!
+      renderQuestion();
+    }
+
+    function isAnswerComplete() {
+      const q = quiz[current];
+      const chars = q.answer.split("").filter(isStringChar);
+      let selected = Array.isArray(userAnswers[current]) ? userAnswers[current] : [];
+      while (selected.length < chars.length) selected.push("");
+      return selected.length >= chars.length &&
+        selected.every((c, i) => c === chars[i] || hintsUsed[current].includes(i));
+    }
 
     function submitAnswer() {
       const feedback = document.getElementById("feedback");
-      const user = userAnswers[current] || "";
-      // 正确答案的string部分
+      const selected = Array.isArray(userAnswers[current]) ? userAnswers[current] : [];
+      const user = selected.join("");
       const correct = quiz[current].answer.split("").filter(isStringChar).join("");
       if (user === correct) {
         feedback.innerHTML = `<span class="correct">答对了！</span>`;
@@ -247,7 +327,6 @@
         feedback.innerHTML = `<span class="incorrect">答错了！</span> 正确答案是：<strong>${correct}</strong>`;
       }
     }
-
     function nextQuestion() {
       if (current < quiz.length - 1) {
         current++;
@@ -273,7 +352,8 @@
       let correctCount = 0;
       let html = "<h3>答题总结</h3><ul>";
       for (let i = 0; i < quiz.length; i++) {
-        const user = userAnswers[i] || "";
+        const selected = Array.isArray(userAnswers[i]) ? userAnswers[i] : [];
+        const user = selected.join("");
         const correct = quiz[i].answer.split("").filter(isStringChar).join("");
         const status = user === correct ? "correct" : "incorrect";
         if (user === correct) correctCount++;
