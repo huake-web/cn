@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>名句还原游戏</title>
+  <style>
+    body {
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      background-color: #fff8dc;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      padding: 1rem;
+      max-width: 600px;
+      margin: auto;
+    }
+    .question {
+      margin-bottom: 1rem;
+      font-size: 1.2rem;
+    }
+    .word-bank, .answer-area {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+    .word-button, .slot-button {
+      padding: 0.5rem 0.75rem;
+      border: 2px solid #888;
+      border-radius: 8px;
+      background-color: #f0e68c;
+      color: #000;
+      cursor: pointer;
+      font-size: 1rem;
+      user-select: none;
+    }
+    .word-button:disabled {
+      opacity: 0.4;
+      pointer-events: none;
+    }
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 1rem;
+    }
+    .button {
+      padding: 0.5rem 1rem;
+      background-color: #ffb6c1;
+      border: none;
+      color: #000;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    .progress-bar {
+      height: 10px;
+      background: #eee;
+      border-radius: 5px;
+      overflow: hidden;
+      margin: 1rem 0;
+    }
+    .progress {
+      height: 100%;
+      background: #87ceeb;
+      width: 0;
+    }
+    .summary {
+      background: #ffe4b5;
+      padding: 1rem;
+      margin-top: 2rem;
+      border-radius: 10px;
+    }
+    .correct {
+      color: green;
+      font-weight: bold;
+    }
+    .incorrect {
+      color: red;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="question" id="question"></div>
+    <div class="answer-area" id="answer-area"></div>
+    <div class="word-bank" id="word-bank"></div>
+    <div id="feedback"></div>
+
+    <div class="controls">
+      <button class="button" onclick="prevQuestion()">上一题</button>
+          <button class="button" onclick="submitAnswer()">提交</button>
+      <button class="button" onclick="nextQuestion()">下一题</button>
+    </div>
+    <div class="progress-bar">
+      <div class="progress" id="progress"></div>
+    </div>
+    <div class="summary" id="summary" style="display: none;"></div>
+  </div>
+
+  <script>
+    
+ const questions = [ { answer: "君子绝交，不出恶声", meaning: "劝人要有君子风度，不讲别人坏话，不伤害别人。" }, { answer: "祸莫大于不知足", meaning: "劝人要知道满足，以免招来祸害" }, { answer: "不经一事，不长一智", meaning: "知识和智慧是由不断尝试累积的" }, { answer: "三人行, 必有我师焉", meaning: "劝勉世人虚心向别人学习" }, { answer: "劝君莫打枝头鸟，子在巢中望母归。", meaning: "劝请世人要珍惜所有的生命" }, { answer: "己所不欲，勿施于人", meaning: "劝人要替人着想" }, { answer: "亡羊而补牢，未为迟也", meaning: "说明一旦发生差错，能及时补救，就还来得及。" }, { answer: "业精于勤, 荒于嬉", meaning: "劝勉读书人应该用功，不可贪玩" }, { answer: "一日不见，如三秋兮。", meaning: "形容对一个人强烈的思念。" }, { answer: "投我以桃，报之以李。", meaning: "比喻礼尚往来" }, { answer: "敏而好学，不耻下问。", meaning: "形容谦虚好学的求学态度。" }, { answer: "温故而知新，可以为师矣。", meaning: "劝人应该常温习旧知识。" }, { answer: "名不正，则言不顺。", meaning: "说明“正名”的重要，也就是一个人要有明确的身份，才能令人信服他所做的事和所讲的话。" }, { answer: "一日暴之，十日寒之。", meaning: "比喻做事没有恒心，将难有所成。" }, { answer: "以子之矛，攻子之盾。", meaning: "比喻自相矛盾。" }, { answer: "口惠而实不至。", meaning: "形容空口说白话，没有信用。" }, { answer: "本是同根生，相煎何太急。", meaning: "形容骨肉相残。" }, { answer: "记人之善，忘人之过。", meaning: "劝人应宽宏大量。" }, { answer: "近朱者赤，近墨者黑。", meaning: "说明环境能影响一个人的习性。" }, { answer: "小时了了，大未必佳。", meaning: "比喻天生聪明的人还需后天的栽培，才能有杰出的表现。" }, { answer: "欲穷千里目，更上一层楼。", meaning: "比喻要取得更高的成就，就得奋发向上。" }, { answer: "慈母手中线，游子身上衣。", meaning: "描写母亲对子女无微不至的爱。" }, { answer: "谁知盘中餐，粒粒皆辛苦。", meaning: "劝勉人们应珍惜食物，不要随意浪费。" }, { answer: "清明时节雨纷纷，路上行人欲断魂。", meaning: "描写清明时节时思念故人的悲伤情景。" }, { answer: "一语为重百金轻。", meaning: "说明守诺的重要，劝勉人们 要守信用。" }, { answer: "路遥知马力，日久见人心。", meaning: "比喻要经过长时间的考验，才能看清一个人的本性。" }, { answer: "明日复明日，明日何其多！日日待明日，万事成蹉跎。", meaning: "劝勉人们应该养成今日事今日毕的好习惯，一味拖延只会误事。" }, { answer: "富贵本无根，尽从勤里得。", meaning: "说明天下没有不劳而获的东西，必须靠自己的双手努力去创造。" }, { answer: "人逢喜事精神爽，月到中秋分外明。", meaning: "形容人遇有喜事，精神将特别爽朗。" }, { answer: "尽得大的责任，就得大快乐；尽得小的责任，就得小快乐。", meaning: "劝勉人们凡事必须尽责，才能从中获得快乐" } ];
+
+
+    let quiz = [];
+    let current = 0;
+    const userAnswers = [];
+    const shuffledChoices = [];
+
+    function shuffle(arr) {
+      return [...arr].sort(() => Math.random() - 0.5);
+    }
+
+    function getOtherChars(count, exclude) {
+      const allChars = questions.flatMap(q => q.answer.split(""));
+      const unique = [...new Set(allChars.filter(c => !exclude.includes(c)))];
+      return shuffle(unique).slice(0, count);
+    }
+
+    function restartGame() {
+      quiz = shuffle(questions).slice(0, 20);
+      current = 0;
+      userAnswers.length = 0;
+      shuffledChoices.length = 0;
+      for (let q of quiz) {
+        const chars = q.answer.replace(/[，。！？]/g, "").split("");
+        const extras = getOtherChars(chars.length, chars);
+        shuffledChoices.push(shuffle([...chars, ...extras]));
+      }
+      document.getElementById("summary").style.display = "none";
+      renderQuestion();
+    }
+
+    function renderQuestion() {
+      const q = quiz[current];
+      const questionEl = document.getElementById("question");
+      const answerArea = document.getElementById("answer-area");
+      const wordBank = document.getElementById("word-bank");
+      const feedback = document.getElementById("feedback");
+      feedback.innerHTML = "";
+      questionEl.innerHTML = `<strong>题目 ${current + 1}：</strong> ${q.meaning}`;
+      answerArea.innerHTML = "";
+      wordBank.innerHTML = "";
+
+      const answerLength = q.answer.replace(/[，。！？]/g, "").length;
+      const selected = userAnswers[current]?.split("") || [];
+
+      for (let i = 0; i < answerLength; i++) {
+        const slot = document.createElement("button");
+        slot.className = "slot-button";
+        slot.textContent = selected[i] || "";
+        slot.onclick = () => {
+          if (slot.textContent) {
+            shuffledChoices[current].push(slot.textContent);
+            selected.splice(i, 1);
+            userAnswers[current] = selected.join("");
+            renderQuestion();
+          }
+        };
+        answerArea.appendChild(slot);
+      }
+
+      for (let char of shuffledChoices[current]) {
+        if (selected.includes(char)) continue;
+        const btn = document.createElement("button");
+        btn.className = "word-button";
+        btn.textContent = char;
+        btn.onclick = () => {
+          if (selected.length < answerLength) {
+            selected.push(char);
+            userAnswers[current] = selected.join("");
+            renderQuestion();
+          }
+        };
+        wordBank.appendChild(btn);
+      }
+
+      updateProgress();
+    }
+
+    function submitAnswer() {
+      const feedback = document.getElementById("feedback");
+      const user = userAnswers[current] || "";
+      const correct = quiz[current].answer.replace(/[，。！？]/g, "");
+      if (user === correct) {
+        feedback.innerHTML = `<span class="correct">答对了！</span>`;
+      } else {
+        feedback.innerHTML = `<span class="incorrect">答错了！</span> 正确答案是：<strong>${correct}</strong>`;
+      }
+    }
+
+    function nextQuestion() {
+      if (current < quiz.length - 1) {
+        current++;
+        renderQuestion();
+      } else {
+        showSummary();
+      }
+    }
+
+    function prevQuestion() {
+      if (current > 0) {
+        current--;
+        renderQuestion();
+      }
+    }
+
+    function updateProgress() {
+      const pct = ((current + 1) / quiz.length) * 100;
+      document.getElementById("progress").style.width = pct + "%";
+    }
+
+    function showSummary() {
+      let correctCount = 0;
+      let html = "<h3>答题总结</h3><ul>";
+      for (let i = 0; i < quiz.length; i++) {
+        const user = userAnswers[i] || "";
+        const correct = quiz[i].answer.replace(/[，。！？]/g, "");
+        const status = user === correct ? "correct" : "incorrect";
+        if (user === correct) correctCount++;
+        html += `<li>
+          题目 ${i + 1}：${quiz[i].meaning}<br>
+          你的答案：<span class="${status}">${user}</span><br>
+          正确答案：${correct}
+        </li><br>`;
+      }
+      html += `</ul><p><strong>共答对：${correctCount} / ${quiz.length} 题</strong></p>`;
+      html += `<button class="button" onclick="restartGame()">重新开始</button>`;
+      document.getElementById("summary").innerHTML = html;
+      document.getElementById("summary").style.display = "block";
+    }
+
+    restartGame();
+  </script>
+</body>
+</html>
