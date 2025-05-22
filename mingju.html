@@ -240,10 +240,6 @@ fetch('yubeiban.json')
         }
       }
 const submitBtn = document.querySelector('.button[onclick="submitAnswer()"]');
-if (submitBtn) {
-  submitBtn.disabled = false;
-  submitBtn.textContent = "提交";
-}
       if (submitBtn && submitBtn.textContent === "已提交") {
   submitBtn.disabled = false;
   submitBtn.textContent = "提交";
