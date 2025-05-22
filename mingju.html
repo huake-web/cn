@@ -273,7 +273,9 @@
     function isStringChar(char) {
       return /[\u4e00-\u9fa5A-Za-z]/.test(char);
     }
-
+if (localStorage.getItem('isLoggedIn') !== 'true') {
+      window.location.href = 'login.html';
+    }
     let questions = [];
 
     fetch('yubeiban.json')
