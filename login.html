@@ -84,16 +84,17 @@
   <script>
     // Simple (demo) login validation
     document.getElementById('loginForm').onsubmit = function(e) {
-      e.preventDefault();
-      var user = document.getElementById('username').value;
-      var pass = document.getElementById('password').value;
-      if(user === 'admin' && pass === '123456'){
-  sessionStorage.setItem('isLoggedIn', 'true');
-  window.location.href = 'index.html';
-} else {
-  document.getElementById('errorMsg').innerText = '用户名或密码错误';
+  e.preventDefault();
+  var user = document.getElementById('username').value;
+  var pass = document.getElementById('password').value;
+  if(user === 'admin' && pass === '123456'){
+    sessionStorage.setItem('isLoggedIn', 'true');
+    window.location.href = 'index.html';
+  } else {
+    document.getElementById('errorMsg').innerText = '用户名或密码错误';
+  }
 }
-    }
+    
   </script>
 </body>
 </html>
