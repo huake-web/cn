@@ -15,23 +15,6 @@
       min-height: 100vh;
       overflow-x: hidden;
     }
-    .progress-bar {
-  position: relative;
-}
-
-.progress-watermark {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  transform: translate(-50%, -50%);
-  height: 40px;
-  width: 40px;
-  opacity: 0.88;
-  border-radius: 50%;
-  pointer-events: none;
-  box-shadow: 0 2px 8px #ffe4e1;
-  z-index: 2;
-}
     .watermark {
       position: fixed;
       top: 0; left: 0; width: 100vw; height: 100vh;
@@ -162,13 +145,21 @@
       background: linear-gradient(90deg, #ffd700 0%, #ffb6c1 100%);
       transform: scale(1.09) rotate(2deg);
     }
+    /* Updated progress bar container for overlay watermark */
+    .progress-bar-container {
+      position: relative;
+      width: 100%;
+      max-width: 640px;
+      margin: 1.8rem 0 0.7rem 0;
+    }
     .progress-bar {
+      width: 100%;
       height: 15px;
       background: #ffe0b2;
       border-radius: 8px;
       overflow: hidden;
-      margin: 1.8rem 0 0.7rem 0;
       box-shadow: 0 1px 4px #ffe4b5;
+      position: relative;
     }
     .progress {
       height: 100%;
@@ -176,6 +167,20 @@
       width: 0;
       border-radius: 8px;
       transition: width 0.4s cubic-bezier(.7,-0.45,.34,1.45);
+    }
+    .progress-watermark {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      transform: translate(-50%, -50%);
+      height: 44px;
+      width: 44px;
+      border-radius: 50%;
+      opacity: 0.96;
+      pointer-events: none;
+      box-shadow: 0 2px 12px #ffe4e1;
+      z-index: 2;
+      transition: left 0.4s cubic-bezier(.7,-0.45,.34,1.45);
     }
     .summary {
       background: linear-gradient(105deg,#ffe4b5 0%,#fff8dc 100%);
@@ -233,6 +238,7 @@
       .container { padding: 0.6rem 0.2rem 1.2rem 0.2rem; }
       .main-title { font-size: 1.28rem; }
       .summary { font-size: 0.98rem; }
+      .progress-watermark { height: 32px; width: 32px; }
     }
   </style>
 </head>
@@ -252,10 +258,14 @@
       <button class="button" onclick="submitAnswer()">✅ 提交</button>
       <button class="button" onclick="nextQuestion()">➡️ 下一题</button>
     </div>
-    <div class="progress-bar">
-  <div class="progress" id="progress"></div>
-  <img src="https://raw.githubusercontent.com/huake-web/cn/main/watermark.jpeg" class="progress-watermark" id="progress-watermark" alt="Watermark" />
-</div>
+    <!-- Updated progress bar section with overlaying watermark -->
+    <div class="progress-bar-container">
+      <div class="progress-bar">
+        <div class="progress" id="progress"></div>
+      </div>
+      <img src="https://raw.githubusercontent.com/huake-web/cn/main/watermark.jpeg"
+        class="progress-watermark" id="progress-watermark" alt="Watermark" />
+    </div>
     <div class="summary" id="summary" style="display: none;"></div>
   </div>
 
@@ -517,20 +527,21 @@
         renderQuestion();
       }
     }
-function updateProgress() {
-  const pct = ((current + 1) / quiz.length) * 100;
-  document.getElementById("progress").style.width = pct + "%";
-  // Move watermark
-  const bar = document.querySelector('.progress-bar');
-  const watermark = document.getElementById("progress-watermark");
-  const barWidth = bar.offsetWidth;
-  const watermarkWidth = watermark.offsetWidth;
-  // Calculate position: at the right end of the colored bar, but not overflow
-  let left = (barWidth * pct / 100);
-  // Prevent overflow (stay inside the bar)
-  left = Math.max(watermarkWidth / 2, Math.min(left, barWidth - watermarkWidth / 2));
-  watermark.style.left = left + "px";
-}
+
+    function updateProgress() {
+      const pct = ((current + 1) / quiz.length) * 100;
+      document.getElementById("progress").style.width = pct + "%";
+      // Move watermark over the bar
+      const container = document.querySelector('.progress-bar-container');
+      const watermark = document.getElementById("progress-watermark");
+      if (!container || !watermark) return;
+      const containerWidth = container.offsetWidth;
+      const watermarkWidth = watermark.offsetWidth;
+      let left = (containerWidth * pct / 100);
+      // Prevent overflow: keep watermark fully inside the container
+      left = Math.max(watermarkWidth / 2, Math.min(left, containerWidth - watermarkWidth / 2));
+      watermark.style.left = (left - watermarkWidth / 2) + "px";
+    }
 
     function showSummary() {
       let correctCount = 0;
