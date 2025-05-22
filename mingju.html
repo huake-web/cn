@@ -15,6 +15,23 @@
       min-height: 100vh;
       overflow-x: hidden;
     }
+    .progress-bar {
+  position: relative;
+}
+
+.progress-watermark {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translate(-50%, -50%);
+  height: 22px;
+  width: 22px;
+  opacity: 0.88;
+  border-radius: 50%;
+  pointer-events: none;
+  box-shadow: 0 2px 8px #ffe4e1;
+  z-index: 2;
+}
     .watermark {
       position: fixed;
       top: 0; left: 0; width: 100vw; height: 100vh;
@@ -236,8 +253,9 @@
       <button class="button" onclick="nextQuestion()">➡️ 下一题</button>
     </div>
     <div class="progress-bar">
-      <div class="progress" id="progress"></div>
-    </div>
+  <div class="progress" id="progress"></div>
+  <img src="https://raw.githubusercontent.com/huake-web/cn/main/watermark.jpeg" class="progress-watermark" id="progress-watermark" alt="Watermark" />
+</div>
     <div class="summary" id="summary" style="display: none;"></div>
   </div>
 
@@ -499,11 +517,20 @@
         renderQuestion();
       }
     }
-
-    function updateProgress() {
-      const pct = ((current + 1) / quiz.length) * 100;
-      document.getElementById("progress").style.width = pct + "%";
-    }
+function updateProgress() {
+  const pct = ((current + 1) / quiz.length) * 100;
+  document.getElementById("progress").style.width = pct + "%";
+  // Move watermark
+  const bar = document.querySelector('.progress-bar');
+  const watermark = document.getElementById("progress-watermark");
+  const barWidth = bar.offsetWidth;
+  const watermarkWidth = watermark.offsetWidth;
+  // Calculate position: at the right end of the colored bar, but not overflow
+  let left = (barWidth * pct / 100);
+  // Prevent overflow (stay inside the bar)
+  left = Math.max(watermarkWidth / 2, Math.min(left, barWidth - watermarkWidth / 2));
+  watermark.style.left = left + "px";
+}
 
     function showSummary() {
       let correctCount = 0;
