@@ -145,7 +145,6 @@
       background: linear-gradient(90deg, #ffd700 0%, #ffb6c1 100%);
       transform: scale(1.09) rotate(2deg);
     }
-    /* Updated progress bar container for overlay watermark */
     .progress-bar-container {
       position: relative;
       width: 100%;
@@ -182,17 +181,60 @@
       z-index: 2;
       transition: left 0.4s cubic-bezier(.7,-0.45,.34,1.45);
     }
-    .summary {
-      background: linear-gradient(105deg,#ffe4b5 0%,#fff8dc 100%);
-      padding: 1.5rem;
-      margin-top: 2.5rem;
-      border-radius: 1.5em;
-      box-shadow: 0 3px 15px #f8bbd0;
-      font-size: 1.15rem;
+    .question-map {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: center;
+      margin: 1.3rem 0 0.5rem 0;
+      align-items: center;
     }
-    .summary h3 { margin-top: 0; color: #ff69b4; font-family: 'Luckiest Guy', cursive, sans-serif; }
-    .summary .correct { color: #43a047; font-weight: bold; }
-    .summary .incorrect { color: #e53935; font-weight: bold; }
+    .question-map-btn {
+      width: 2.2em;
+      height: 2.2em;
+      border: none;
+      border-radius: 50%;
+      font-size: 1.1em;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+      background: #eee;
+      color: #444;
+      box-shadow: 0 1.5px 6px #ffe4e1;
+      outline: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .question-map-btn.correct {
+      background: #b6fcd5;
+      color: #2e7d32;
+    }
+    .question-map-btn.incorrect {
+      background: #ffcdd2;
+      color: #b71c1c;
+    }
+    .question-map-btn.active {
+      border: 2.5px solid #7b1fa2;
+    }
+    .question-map-btn:disabled,
+    .question-map-btn[aria-disabled="true"] {
+      opacity: 0.5;
+      cursor: default;
+    }
+    .score-badge {
+      margin-left: 1.3rem;
+      font-size: 1.13em;
+      font-weight: bold;
+      color: #2e7d32;
+      background: #b6fcd5;
+      border-radius: 1em;
+      padding: 0.20em 1em;
+      box-shadow: 0 1.5px 6px #ffe4e1;
+      user-select: none;
+      display: inline-block;
+      vertical-align: middle;
+    }
     .correct {
       color: #43a047;
       font-weight: bold;
@@ -214,7 +256,6 @@
       font-weight: 600;
       letter-spacing: 1px;
     }
-    /* Slot color for hint and autofill */
     .slot-button[style*="background-color: #b6fcd5"] {
       box-shadow: 0 0 9px #b6fcd5;
       border: 2px solid #43a047;
@@ -223,7 +264,6 @@
       box-shadow: 0 0 9px #90caf9;
       border: 2px solid #42a5f5;
     }
-    /* Animation for feedback */
     #feedback span {
       display: inline-block;
       animation: pop 0.45s cubic-bezier(.7,-0.45,.34,1.45);
@@ -233,12 +273,12 @@
       70% { transform: scale(1.25); opacity: 1;}
       100% { transform: scale(1); }
     }
-    /* Responsive tweaks */
     @media (max-width: 600px) {
       .container { padding: 0.6rem 0.2rem 1.2rem 0.2rem; }
       .main-title { font-size: 1.28rem; }
-      .summary { font-size: 0.98rem; }
+      .score-badge { font-size: 0.98em; padding: 0.10em 0.6em; }
       .progress-watermark { height: 32px; width: 32px; }
+      .question-map-btn { width: 1.5em; height: 1.5em; font-size: 1em; }
     }
   </style>
 </head>
@@ -250,15 +290,13 @@
     <div class="answer-area" id="answer-area"></div>
     <div class="word-bank" id="word-bank"></div>
     <div id="feedback"></div>
-
     <div class="controls">
-      <button class="button" onclick="prevQuestion()">⬅️ 上一题</button>
+      <button class="button" onclick="prevQuestion()" id="prev-btn">⬅️ 上一题</button>
       <button class="button" onclick="useHint()" id="hint-btn">🪄 提示</button>
       <span class="hint-info" id="hint-info"></span>
-      <button class="button" onclick="submitAnswer()">✅ 提交</button>
-      <button class="button" onclick="nextQuestion()">➡️ 下一题</button>
+      <button class="button" onclick="submitAnswer()" id="submit-btn">✅ 提交</button>
+      <button class="button" onclick="nextQuestion()" id="next-btn">➡️ 下一题</button>
     </div>
-    <!-- Updated progress bar section with overlaying watermark -->
     <div class="progress-bar-container">
       <div class="progress-bar">
         <div class="progress" id="progress"></div>
@@ -266,15 +304,16 @@
       <img src="https://raw.githubusercontent.com/huake-web/cn/main/watermark.jpeg"
         class="progress-watermark" id="progress-watermark" alt="Watermark" />
     </div>
-    <div class="summary" id="summary" style="display: none;"></div>
+    <div class="question-map" id="question-map"></div>
   </div>
-
   <script>
+    // Login check, sessionStorage only (per tab)
+    if (sessionStorage.getItem('isLoggedIn') !== 'true') {
+      window.location.href = 'login.html';
+    }
+
     function isStringChar(char) {
       return /[\u4e00-\u9fa5A-Za-z]/.test(char);
-    }
-if (sessionStorage.getItem('isLoggedIn') !== 'true') {
-      window.location.href = 'login.html';
     }
     let questions = [];
 
@@ -282,7 +321,7 @@ if (sessionStorage.getItem('isLoggedIn') !== 'true') {
       .then(res => res.json())
       .then(data => {
         questions = data;
-        restartGame(); // Start the game after questions are loaded
+        restartGame();
       })
       .catch(err => {
         console.error("Failed to load questions:", err);
@@ -297,6 +336,7 @@ if (sessionStorage.getItem('isLoggedIn') !== 'true') {
     const submitted = [];
     const revealed = [];
     const feedbackMsg = [];
+    const firstSubmissions = [];
 
     function shuffle(arr) {
       return [...arr].sort(() => Math.random() - 0.5);
@@ -316,6 +356,7 @@ if (sessionStorage.getItem('isLoggedIn') !== 'true') {
       submitted.length = 0;
       revealed.length = 0;
       feedbackMsg.length = 0;
+      firstSubmissions.length = 0;
       for (let q of quiz) {
         const chars = q.answer.split("");
         const stringChars = chars.filter(isStringChar);
@@ -324,9 +365,11 @@ if (sessionStorage.getItem('isLoggedIn') !== 'true') {
         hintsUsed.push([]);
         revealed.push([]);
         feedbackMsg.push("");
+        firstSubmissions.push(undefined);
       }
-      document.getElementById("summary").style.display = "none";
+      document.getElementById("feedback").innerHTML = "";
       renderQuestion();
+      renderQuestionMap();
     }
 
     function renderQuestion() {
@@ -343,7 +386,6 @@ if (sessionStorage.getItem('isLoggedIn') !== 'true') {
       const chars = q.answer.split("");
       const stringChars = chars.filter(isStringChar);
 
-      // Always treat userAnswers[current] as ARRAY
       let selected = Array.isArray(userAnswers[current]) ? userAnswers[current].slice() : [];
       while (selected.length < stringChars.length) selected.push("");
       userAnswers[current] = selected.slice();
@@ -365,10 +407,12 @@ if (sessionStorage.getItem('isLoggedIn') !== 'true') {
           const isReveal = revealed[current] && revealed[current].includes(slotStringCharIdx);
           if (isHint) {
             slot.disabled = true;
-            slot.style.backgroundColor = "#b6fcd5"; // green for hint
+            slot.style.backgroundColor = "#b6fcd5";
           } else if (isReveal) {
             slot.disabled = true;
-            slot.style.backgroundColor = "#add8e6"; // light blue for autofill
+            slot.style.backgroundColor = "#add8e6";
+          } else if (submitted[current]) {
+            slot.disabled = true;
           } else {
             const thisIdx = slotStringCharIdx;
             slot.onclick = () => {
@@ -384,59 +428,43 @@ if (sessionStorage.getItem('isLoggedIn') !== 'true') {
         }
       }
 
-      // Update submit button state based on submitted array
-      const submitBtn = document.querySelector('.button[onclick="submitAnswer()"]');
-      if (submitBtn) {
-        if (submitted[current]) {
-          submitBtn.disabled = true;
-          submitBtn.textContent = "已提交";
-        } else {
-          submitBtn.disabled = false;
-          submitBtn.textContent = "提交";
-        }
-      }
-
       // Frequency count in pool
       const poolCount = {};
       for (const c of shuffledChoices[current]) {
         if (!isStringChar(c)) continue;
         poolCount[c] = (poolCount[c] || 0) + 1;
       }
-      // Used count (answer slots)
       const usedCount = {};
       for (let i = 0; i < selected.length; i++) {
         if (selected[i]) {
           usedCount[selected[i]] = (usedCount[selected[i]] || 0) + 1;
         }
       }
-      // Used by hint
       for (const idx of hintsUsed[current]) {
         const hintChar = stringChars[idx];
         usedCount[hintChar] = (usedCount[hintChar] || 0) + 1;
       }
-      // Used by reveal (autofill)
       if (revealed[current]) {
         for (const idx of revealed[current]) {
           const revealChar = stringChars[idx];
           usedCount[revealChar] = (usedCount[revealChar] || 0) + 1;
         }
       }
-      // Render word bank
       const bankCharCount = {};
       for (const char of shuffledChoices[current]) {
         if (!isStringChar(char)) continue;
         bankCharCount[char] = (bankCharCount[char] || 0) + 1;
         const used = usedCount[char] || 0;
         if (bankCharCount[char] <= poolCount[char] - used) {
+          if (submitted[current]) continue;
           const btn = document.createElement("button");
           btn.className = "word-button";
           btn.textContent = char;
           btn.onclick = () => {
-            // Fill first empty slot
             let idx = selected.findIndex(v => !v);
             if (idx !== -1) {
               selected[idx] = char;
-              userAnswers[current] = selected.slice(); // Always store array!
+              userAnswers[current] = selected.slice();
               renderQuestion();
             }
           };
@@ -451,7 +479,61 @@ if (sessionStorage.getItem('isLoggedIn') !== 'true') {
       hintBtn.disabled = remainingHints <= 0 || isAnswerComplete() || submitted[current];
       hintInfo.textContent = `剩余提示：${remainingHints} 次`;
 
+      // Submit button state
+      const submitBtn = document.getElementById("submit-btn");
+      if (submitted[current]) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "已提交";
+      } else {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "提交";
+      }
+
+      document.getElementById("prev-btn").disabled = (current === 0);
+
+      const nextBtn = document.getElementById("next-btn");
+      if (current === quiz.length - 1) {
+        nextBtn.style.display = "none";
+      } else {
+        nextBtn.style.display = "";
+        nextBtn.disabled = false;
+      }
+
       updateProgress();
+      renderQuestionMap();
+    }
+
+    function renderQuestionMap() {
+      const map = document.getElementById('question-map');
+      map.innerHTML = '';
+      let correctCount = 0;
+      for (let i = 0; i < quiz.length; i++) {
+        let status = '';
+        if (submitted[i]) {
+          const user = typeof firstSubmissions[i] !== 'undefined' ? firstSubmissions[i] : '';
+          const correct = quiz[i].answer.split("").filter(isStringChar).join("");
+          if (user === correct) {
+            status = 'correct';
+            correctCount++;
+          } else {
+            status = 'incorrect';
+          }
+        }
+        const btn = document.createElement('button');
+        btn.className = 'question-map-btn' + (status ? ' ' + status : '') + (i === current ? ' active' : '');
+        btn.textContent = i + 1;
+        btn.onclick = () => {
+          current = i;
+          renderQuestion();
+        };
+        map.appendChild(btn);
+      }
+      // Score badge
+      const total = quiz.length;
+      const score = document.createElement('span');
+      score.className = 'score-badge';
+      score.innerHTML = `得分：${correctCount} / ${total}`;
+      map.appendChild(score);
     }
 
     function useHint() {
@@ -460,7 +542,6 @@ if (sessionStorage.getItem('isLoggedIn') !== 'true') {
       const stringChars = q.answer.split("").filter(isStringChar);
       let selected = Array.isArray(userAnswers[current]) ? userAnswers[current].slice() : [];
       while (selected.length < stringChars.length) selected.push("");
-      // Find all eligible hint slots
       const eligible = [];
       for (let i = 0; i < stringChars.length; i++) {
         if (hintsUsed[current].includes(i)) continue;
@@ -469,11 +550,10 @@ if (sessionStorage.getItem('isLoggedIn') !== 'true') {
         eligible.push(i);
       }
       if (eligible.length === 0) return;
-      // Pick one randomly
       const idx = eligible[Math.floor(Math.random() * eligible.length)];
       hintsUsed[current].push(idx);
       selected[idx] = stringChars[idx];
-      userAnswers[current] = selected.slice(); // Store as array!
+      userAnswers[current] = selected.slice();
       renderQuestion();
     }
 
@@ -482,7 +562,6 @@ if (sessionStorage.getItem('isLoggedIn') !== 'true') {
       const chars = q.answer.split("").filter(isStringChar);
       let selected = Array.isArray(userAnswers[current]) ? userAnswers[current] : [];
       while (selected.length < chars.length) selected.push("");
-      // Consider both hint and reveal (autofill) as "filled"
       return selected.length >= chars.length &&
         selected.every((c, i) =>
           c === chars[i] ||
@@ -493,20 +572,24 @@ if (sessionStorage.getItem('isLoggedIn') !== 'true') {
 
     function submitAnswer() {
       const feedback = document.getElementById("feedback");
-      const selected = Array.isArray(userAnswers[current]) ? userAnswers[current] : [];
+      const selected = Array.isArray(userAnswers[current]) ? userAnswers[current].slice() : [];
       const user = selected.join("");
       const correct = quiz[current].answer.split("").filter(isStringChar).join("");
+
+      // Only store the first submission
+      if (typeof firstSubmissions[current] === 'undefined') {
+        firstSubmissions[current] = user;
+      }
 
       const isCorrect = user === correct;
 
       if (isCorrect) {
         feedbackMsg[current] = `<span class="correct">答对了！</span>`;
-        revealed[current] = []; // No reveal needed, already correct
+        revealed[current] = [];
       } else {
         feedbackMsg[current] = `<span class="incorrect">答错了！</span> 正确答案已填入。`;
         const correctChars = correct.split("");
         userAnswers[current] = correctChars.slice();
-        // Mark which slots are revealed by autofill (not hint)
         revealed[current] = correctChars.map((_, i) => i);
       }
 
@@ -518,8 +601,6 @@ if (sessionStorage.getItem('isLoggedIn') !== 'true') {
       if (current < quiz.length - 1) {
         current++;
         renderQuestion();
-      } else {
-        showSummary();
       }
     }
 
@@ -533,37 +614,14 @@ if (sessionStorage.getItem('isLoggedIn') !== 'true') {
     function updateProgress() {
       const pct = ((current + 1) / quiz.length) * 100;
       document.getElementById("progress").style.width = pct + "%";
-      // Move watermark over the bar
       const container = document.querySelector('.progress-bar-container');
       const watermark = document.getElementById("progress-watermark");
       if (!container || !watermark) return;
       const containerWidth = container.offsetWidth;
       const watermarkWidth = watermark.offsetWidth;
       let left = (containerWidth * pct / 100);
-      // Prevent overflow: keep watermark fully inside the container
       left = Math.max(watermarkWidth / 2, Math.min(left, containerWidth - watermarkWidth / 2));
       watermark.style.left = (left - watermarkWidth / 2) + "px";
-    }
-
-    function showSummary() {
-      let correctCount = 0;
-      let html = "<h3>答题总结</h3><ul>";
-      for (let i = 0; i < quiz.length; i++) {
-        const selected = Array.isArray(userAnswers[i]) ? userAnswers[i] : [];
-        const user = selected.join("");
-        const correct = quiz[i].answer.split("").filter(isStringChar).join("");
-        const status = user === correct ? "correct" : "incorrect";
-        if (user === correct) correctCount++;
-        html += `<li>
-          题目 ${i + 1}：${quiz[i].meaning}<br>
-          你的答案：<span class="${status}">${user}</span><br>
-          正确答案：${correct}
-        </li><br>`;
-      }
-      html += `</ul><p><strong>共答对：${correctCount} / ${quiz.length} 题</strong></p>`;
-      html += `<button class="button" onclick="restartGame()">重新开始</button>`;
-      document.getElementById("summary").innerHTML = html;
-      document.getElementById("summary").style.display = "block";
     }
   </script>
 </body>
