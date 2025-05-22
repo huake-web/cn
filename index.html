@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
+  <head>
+  <script>
+    if (localStorage.getItem('isLoggedIn') !== 'true') {
+      window.location.href = 'login.html';
+    }
+  </script>
+  <!-- ...other head content... -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>华科 · 游戏大厅</title>
