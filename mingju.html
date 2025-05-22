@@ -273,7 +273,7 @@
     function isStringChar(char) {
       return /[\u4e00-\u9fa5A-Za-z]/.test(char);
     }
-if (localStorage.getItem('isLoggedIn') !== 'true') {
+if (sessionStorage.getItem('isLoggedIn') !== 'true') {
       window.location.href = 'login.html';
     }
     let questions = [];
