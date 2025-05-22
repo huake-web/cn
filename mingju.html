@@ -239,6 +239,15 @@ fetch('yubeiban.json')
           slotStringCharIdx++;
         }
       }
+const submitBtn = document.querySelector('.button[onclick="submitAnswer()"]');
+if (submitBtn) {
+  submitBtn.disabled = false;
+  submitBtn.textContent = "提交";
+}
+      if (submitBtn && submitBtn.textContent === "已提交") {
+  submitBtn.disabled = false;
+  submitBtn.textContent = "提交";
+}
 
       // Frequency count in pool
       const poolCount = {};
@@ -320,8 +329,7 @@ fetch('yubeiban.json')
       return selected.length >= chars.length &&
         selected.every((c, i) => c === chars[i] || hintsUsed[current].includes(i));
     }
-
-    function submitAnswer() {
+function submitAnswer() {
   const feedback = document.getElementById("feedback");
   const selected = Array.isArray(userAnswers[current]) ? userAnswers[current] : [];
   const user = selected.join("");
@@ -333,19 +341,21 @@ fetch('yubeiban.json')
     feedback.innerHTML = `<span class="correct">答对了！</span>`;
   } else {
     feedback.innerHTML = `<span class="incorrect">答错了！</span> 正确答案已填入。`;
-    
-    // Auto-fill the correct answer
     const correctChars = correct.split("");
     userAnswers[current] = correctChars.slice();
-
-    // Mark all as hints to disable editing
     hintsUsed[current] = correctChars.map((_, i) => i);
   }
-document.querySelector('.button[onclick="submitAnswer()"]').disabled = true;
 
-  // Re-render to update slots and disable editing
-  renderQuestion();
+  // Disable and update the submit button
+  const submitBtn = document.querySelector('.button[onclick="submitAnswer()"]');
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = "已提交";
+  }
+
+  renderQuestion(); // re-render with correct answer or locked slots
 }
+
 
     function nextQuestion() {
       if (current < quiz.length - 1) {
