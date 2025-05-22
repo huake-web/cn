@@ -141,7 +141,7 @@
       return /[\u4e00-\u9fa5A-Za-z]/.test(char);
     }
 
-    const questions = [
+ /*   const questions = [
       { answer: "君子绝交，不出恶声", meaning: "劝人要有君子风度，不讲别人坏话，不伤害别人。" },
       { answer: "祸莫大于不知足", meaning: "劝人要知道满足，以免招来祸害" },
       { answer: "不经一事，不长一智", meaning: "知识和智慧是由不断尝试累积的" },
@@ -172,7 +172,23 @@
       { answer: "富贵本无根，尽从勤里得。", meaning: "说明天下没有不劳而获的东西，必须靠自己的双手努力去创造。" },
       { answer: "人逢喜事精神爽，月到中秋分外明。", meaning: "形容人遇有喜事，精神将特别爽朗。" },
       { answer: "尽得大的责任，就得大快乐；尽得小的责任，就得小快乐。", meaning: "劝勉人们凡事必须尽责，才能从中获得快乐" }
-    ];
+    ]; */
+
+    
+let questions = [];
+
+fetch('questions.json')
+  .then(res => res.json())
+  .then(data => {
+    questions = data;
+    restartGame(); // Start the game after questions are loaded
+  })
+  .catch(err => {
+    console.error("Failed to load questions:", err);
+    document.getElementById("question").innerText = "题库加载失败，请稍后重试。";
+  });
+
+
 
     let quiz = [];
     let current = 0;
@@ -391,7 +407,7 @@
       document.getElementById("summary").style.display = "block";
     }
 
-    restartGame();
+    
   </script>
 </body>
 </html>
