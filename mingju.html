@@ -141,27 +141,25 @@
       return /[\u4e00-\u9fa5A-Za-z]/.test(char);
     }
 
- 
-let questions = [];
+    let questions = [];
 
-fetch('yubeiban.json')
-  .then(res => res.json())
-  .then(data => {
-    questions = data;
-    restartGame(); // Start the game after questions are loaded
-  })
-  .catch(err => {
-    console.error("Failed to load questions:", err);
-    document.getElementById("question").innerText = "题库加载失败，请稍后重试。";
-  });
-
-
+    fetch('yubeiban.json')
+      .then(res => res.json())
+      .then(data => {
+        questions = data;
+        restartGame(); // Start the game after questions are loaded
+      })
+      .catch(err => {
+        console.error("Failed to load questions:", err);
+        document.getElementById("question").innerText = "题库加载失败，请稍后重试。";
+      });
 
     let quiz = [];
     let current = 0;
     const userAnswers = [];
     const shuffledChoices = [];
     const hintsUsed = [];
+    const submitted = []; // <-- track submission state
 
     function shuffle(arr) {
       return [...arr].sort(() => Math.random() - 0.5);
@@ -178,6 +176,7 @@ fetch('yubeiban.json')
       userAnswers.length = 0;
       shuffledChoices.length = 0;
       hintsUsed.length = 0;
+      submitted.length = 0; // <-- reset submission state
       for (let q of quiz) {
         const chars = q.answer.split("");
         const stringChars = chars.filter(isStringChar);
@@ -239,11 +238,18 @@ fetch('yubeiban.json')
           slotStringCharIdx++;
         }
       }
-const submitBtn = document.querySelector('.button[onclick="submitAnswer()"]');
-      if (submitBtn && submitBtn.textContent === "已提交") {
-  submitBtn.disabled = false;
-  submitBtn.textContent = "提交";
-}
+
+      // Update submit button state based on submitted array
+      const submitBtn = document.querySelector('.button[onclick="submitAnswer()"]');
+      if (submitBtn) {
+        if (submitted[current]) {
+          submitBtn.disabled = true;
+          submitBtn.textContent = "已提交";
+        } else {
+          submitBtn.disabled = false;
+          submitBtn.textContent = "提交";
+        }
+      }
 
       // Frequency count in pool
       const poolCount = {};
@@ -290,7 +296,7 @@ const submitBtn = document.querySelector('.button[onclick="submitAnswer()"]');
       const hintBtn = document.getElementById("hint-btn");
       const hintInfo = document.getElementById("hint-info");
       const remainingHints = 3 - hintsUsed[current].length;
-      hintBtn.disabled = remainingHints <= 0 || isAnswerComplete();
+      hintBtn.disabled = remainingHints <= 0 || isAnswerComplete() || submitted[current];
       hintInfo.textContent = `剩余提示：${remainingHints} 次`;
 
       updateProgress();
@@ -325,33 +331,27 @@ const submitBtn = document.querySelector('.button[onclick="submitAnswer()"]');
       return selected.length >= chars.length &&
         selected.every((c, i) => c === chars[i] || hintsUsed[current].includes(i));
     }
-function submitAnswer() {
-  const feedback = document.getElementById("feedback");
-  const selected = Array.isArray(userAnswers[current]) ? userAnswers[current] : [];
-  const user = selected.join("");
-  const correct = quiz[current].answer.split("").filter(isStringChar).join("");
 
-  const isCorrect = user === correct;
+    function submitAnswer() {
+      const feedback = document.getElementById("feedback");
+      const selected = Array.isArray(userAnswers[current]) ? userAnswers[current] : [];
+      const user = selected.join("");
+      const correct = quiz[current].answer.split("").filter(isStringChar).join("");
 
-  if (isCorrect) {
-    feedback.innerHTML = `<span class="correct">答对了！</span>`;
-  } else {
-    feedback.innerHTML = `<span class="incorrect">答错了！</span> 正确答案已填入。`;
-    const correctChars = correct.split("");
-    userAnswers[current] = correctChars.slice();
-    hintsUsed[current] = correctChars.map((_, i) => i);
-  }
+      const isCorrect = user === correct;
 
-  // Disable and update the submit button
-  const submitBtn = document.querySelector('.button[onclick="submitAnswer()"]');
-  if (submitBtn) {
-    submitBtn.disabled = true;
-    submitBtn.textContent = "已提交";
-  }
+      if (isCorrect) {
+        feedback.innerHTML = `<span class="correct">答对了！</span>`;
+      } else {
+        feedback.innerHTML = `<span class="incorrect">答错了！</span> 正确答案已填入。`;
+        const correctChars = correct.split("");
+        userAnswers[current] = correctChars.slice();
+        hintsUsed[current] = correctChars.map((_, i) => i);
+      }
 
-  renderQuestion(); // re-render with correct answer or locked slots
-}
-
+      submitted[current] = true; // mark as submitted
+      renderQuestion();
+    }
 
     function nextQuestion() {
       if (current < quiz.length - 1) {
@@ -394,8 +394,6 @@ function submitAnswer() {
       document.getElementById("summary").innerHTML = html;
       document.getElementById("summary").style.display = "block";
     }
-
-    
   </script>
 </body>
 </html>
