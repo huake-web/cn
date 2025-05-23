@@ -636,7 +636,7 @@
 
 
 
-    fetch('f1chengyu.json')
+    fetch('https://huake-web.github.io/cn/f1chengyu.json')
 
       .then(res => res.json())
 
@@ -760,8 +760,8 @@ console.log("Current question object:", q);
 
       feedback.innerHTML = feedbackMsg[current] || "";
 
-    /*  questionEl.innerHTML = `<strong>题目 ${current + 1}：</strong> ${q.meaning}`;*/
-      questionEl.innerHTML = "HELLO TEST";
+    questionEl.innerHTML = `<strong>题目 ${current + 1}：</strong> ${q.meaning}`;
+     
 
       answerArea.innerHTML = "";
 
