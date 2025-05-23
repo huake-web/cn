@@ -38,8 +38,13 @@
       background: rgba(255,255,255,0.95);
       border-radius: 2rem;
       box-shadow: 0 12px 32px 0 rgba(255,192,203,0.13), 0 1.5px 8px 0 rgba(135,206,250,0.11);
-    }
     
+.main-title-img {
+  width: 2.2em;   /* adjust size as needed */
+  height: 2.2em;
+  margin-left: 0.4em;
+  vertical-align: middle;
+}
     .main-title {
       text-align: center;
       font-size: 2.3rem;
@@ -49,6 +54,7 @@
       margin: 0 0 2rem 0;
       text-shadow: 1.5px 2.5px 0 #fff176, 0 2px 10px #ffb6c1;
       user-select: none;
+      gap: 0.7em; /* space between text and image */
     }
     .tiles {
       display: flex;
@@ -118,7 +124,11 @@
 <body>
   <div class="watermark"></div>
   <div class="container">
-    <div class="main-title">🌈 华科 · 游戏大厅 🌟</div>
+    <div class="main-title">
+  🌈 华科 · 游戏大厅 🌟
+  <img src="game.png" alt="Game Icon" class="main-title-img">
+</div>
+    
   
     <div class="tiles">
       <!-- Game 1 -->
