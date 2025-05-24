@@ -18,7 +18,7 @@
     .watermark {
       position: fixed;
       top: 0; left: 0; width: 100vw; height: 100vh;
-      background: url('https://raw.githubusercontent.com/huake-web/cn/main/watermark.jpeg') no-repeat center 30%;
+      background: url('https://raw.githubusercontent.com/huake-web/cn/main/img/watermark.jpeg') no-repeat center 30%;
       background-size: 60vw auto;
       opacity: 0.15;
       z-index: 0;
@@ -305,7 +305,7 @@
       <div class="progress-bar">
         <div class="progress" id="progress"></div>
       </div>
-      <img src="https://raw.githubusercontent.com/huake-web/cn/main/watermark.jpeg"
+      <img src="https://raw.githubusercontent.com/huake-web/cn/main/img/watermark.jpeg"
         class="progress-watermark" id="progress-watermark" alt="Watermark" />
     </div>
     <div class="question-map" id="question-map"></div>
@@ -321,7 +321,7 @@
     }
     let questions = [];
 
-    fetch('f1chengyu.json')
+    fetch('jiaocai/f1chengyu.json')
       .then(res => res.json())
       .then(data => {
         questions = data;
