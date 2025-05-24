@@ -8,8 +8,8 @@
     "answer": "拉面"
   },
   {
-    "meaning": "<img src='img/hamburger.jpg' style='max-width:280px;max-height:180px;vertical-align:middle;'><div style='margin-top:0.7em;'>西式快餐</div>",
-    "answer": "汉堡包"
+    "meaning": "<img src='img/food/sushi.jpg' style='max-width:280px;max-height:180px;vertical-align:middle;'><div style='margin-top:0.7em;'>日本美食</div>",
+    "answer": "寿司"
   },
   {
     "meaning": "<img src='img/xiaolongbao.jpg' style='max-width:280px;max-height:180px;vertical-align:middle;'><div style='margin-top:0.7em;'>上海著名小吃</div>",
