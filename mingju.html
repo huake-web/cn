@@ -18,7 +18,7 @@
     .watermark {
       position: fixed;
       top: 0; left: 0; width: 100vw; height: 100vh;
-      background: url('https://raw.githubusercontent.com/huake-web/cn/main/watermark.jpeg') no-repeat center 30%;
+      background: url('https://raw.githubusercontent.com/huake-web/cn/main/img/watermark.jpeg') no-repeat center 30%;
       background-size: 60vw auto;
       opacity: 0.15;
       z-index: 0;
@@ -321,7 +321,7 @@
     }
     let questions = [];
 
-    fetch('yubeiban.json')
+    fetch('jiaocai/yubeiban.json')
       .then(res => res.json())
       .then(data => {
         questions = data;
