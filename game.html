@@ -405,32 +405,39 @@
     }
 
     function restartGame() {
-      quiz = shuffle(questions).slice(0, 20);
-      current = 0;
-      userAnswers.length = 0;
-      shuffledChoices.length = 0;
-      hintsUsed.length = 0;
-      submitted.length = 0;
-      revealed.length = 0;
-      feedbackMsg.length = 0;
-      firstSubmissions.length = 0;
-      currentStreak = 0;
-      highestStreak = 0;
-      updateStreakDisplay();
-      for (let q of quiz) {
-        const chars = q.answer.split("");
-        const stringChars = chars.filter(isStringChar);
-        const extras = getOtherChars(stringChars.length, stringChars);
-        shuffledChoices.push(shuffle([...stringChars, ...extras]));
-        hintsUsed.push([]);
-        revealed.push([]);
-        feedbackMsg.push("");
-        firstSubmissions.push(undefined);
-      }
-      document.getElementById("feedback").innerHTML = "";
-      renderQuestion();
-      renderQuestionMap();
+  quiz = shuffle(questions).slice(0, 20);
+  current = 0;
+  userAnswers.length = 0;
+  shuffledChoices.length = 0;
+  hintsUsed.length = 0;
+  submitted.length = 0;
+  revealed.length = 0;
+  feedbackMsg.length = 0;
+  firstSubmissions.length = 0;
+  currentStreak = 0;
+  highestStreak = 0;
+  updateStreakDisplay();
+  for (let q of quiz) {
+    const chars = q.answer.split("");
+    const stringChars = chars.filter(isStringChar);
+
+    // Custom: more distractor words if food.json is loaded!
+    let extraCount = stringChars.length; // default
+    if (jsonFile.includes('food.json')) {
+      extraCount = stringChars.length * 3; // e.g. double the distractors
     }
+    const extras = getOtherChars(extraCount, stringChars);
+
+    shuffledChoices.push(shuffle([...stringChars, ...extras]));
+    hintsUsed.push([]);
+    revealed.push([]);
+    feedbackMsg.push("");
+    firstSubmissions.push(undefined);
+  }
+  document.getElementById("feedback").innerHTML = "";
+  renderQuestion();
+  renderQuestionMap();
+}
 
     function renderQuestion() {
       const q = quiz[current];
