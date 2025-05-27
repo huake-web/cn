@@ -418,23 +418,31 @@
   highestStreak = 0;
   updateStreakDisplay();
   for (let q of quiz) {
-    const chars = q.answer.split("");
-    const stringChars = chars.filter(isStringChar);
+  const chars = q.answer.split("");
+  const stringChars = chars.filter(isStringChar);
 
-    // Custom: more distractor words if food.json is loaded!
-    let extraCount = stringChars.length; // default
+  let choices;
+  if (q.bank && Array.isArray(q.bank) && q.bank.length > 0) {
+    // Use the custom word bank, but ensure answer chars are included
+    const allChoices = Array.from(new Set([...stringChars, ...q.bank]));
+    choices = shuffle(allChoices);
+  } else {
+    // Default logic
+    let extraCount = stringChars.length;
     if (jsonFile.includes('food.json')) {
-      extraCount = stringChars.length * 3; // e.g. double the distractors
+      extraCount = stringChars.length * 2;
     }
     const extras = getOtherChars(extraCount, stringChars);
-
-    shuffledChoices.push(shuffle([...stringChars, ...extras]));
-    hintsUsed.push([]);
-    revealed.push([]);
-    feedbackMsg.push("");
-    firstSubmissions.push(undefined);
+    choices = shuffle([...stringChars, ...extras]);
   }
-  document.getElementById("feedback").innerHTML = "";
+
+  shuffledChoices.push(choices);
+  hintsUsed.push([]);
+  revealed.push([]);
+  feedbackMsg.push("");
+  firstSubmissions.push(undefined);
+}
+    document.getElementById("feedback").innerHTML = "";
   renderQuestion();
   renderQuestionMap();
 }
