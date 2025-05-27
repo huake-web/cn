@@ -18,5 +18,25 @@
   {
     "meaning": "<img src='img/food/icecream.jpg' style='max-width:280px;max-height:180px;vertical-align:middle;'>",
     "answer": "雪糕"
+  },
+  {
+    "meaning": "<img src='img/food/fries.jpg' style='max-width:280px;max-height:180px;vertical-align:middle;'>",
+    "answer": "薯条"
+  },
+  {
+    "meaning": "<img src='img/food/popcorn.jpg' style='max-width:280px;max-height:180px;vertical-align:middle;'>",
+    "answer": "爆米花"
+  },
+  {
+    "meaning": "<img src='img/food/donut.jpg' style='max-width:280px;max-height:180px;vertical-align:middle;'>",
+    "answer": "甜甜圈"
+  },
+  {
+    "meaning": "<img src='img/food/siewmai.jpg' style='max-width:280px;max-height:180px;vertical-align:middle;'>",
+    "answer": "烧卖"
+  },
+  {
+    "meaning": "<img src='img/food/zongzi.jpg' style='max-width:280px;max-height:180px;vertical-align:middle;'>",
+    "answer": "粽子"
   }
 ]
