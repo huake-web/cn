@@ -184,8 +184,8 @@
       });
 
     function restartMatchingGame() {
-      leftItems = questions.map(q => q.answer);
-      rightItems = shuffle(questions.map(q => q.meaning));
+      leftItems = questions.map(q => q.meaning);
+      rightItems = shuffle(questions.map(q => q.answer));
       matches = [];
       selectedLeft = null;
       selectedRight = null;
