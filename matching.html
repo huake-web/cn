@@ -196,25 +196,24 @@
     }
 
     function renderMatchingGame() {
-      // Render left column (answers)
-      const leftCol = document.getElementById('left-column');
-      leftCol.innerHTML = '';
-      leftItems.forEach((item, idx) => {
-        const btn = document.createElement('button');
-        btn.className = 'match-btn' +
-          (selectedLeft === idx ? ' selected' : '') +
-          (matches.some(m => m.leftIdx === idx) ? ' matched' : '');
-        btn.textContent = item;
-        btn.disabled = matches.some(m => m.leftIdx === idx);
-        btn.onclick = () => {
-          if (btn.disabled) return;
-          selectedLeft = idx;
-          renderMatchingGame();
-          tryPair();
-        };
-        leftCol.appendChild(btn);
-      });
-
+      // Render left column (meanings, may contain HTML)
+const leftCol = document.getElementById('left-column');
+leftCol.innerHTML = '';
+leftItems.forEach((item, idx) => {
+  const btn = document.createElement('button');
+  btn.className = 'match-btn' +
+    (selectedLeft === idx ? ' selected' : '') +
+    (matches.some(m => m.leftIdx === idx) ? ' matched' : '');
+  btn.innerHTML = item;  // Use innerHTML for images or rich text!
+  btn.disabled = matches.some(m => m.leftIdx === idx);
+  btn.onclick = () => {
+    if (btn.disabled) return;
+    selectedLeft = idx;
+    renderMatchingGame();
+    tryPair();
+  };
+  leftCol.appendChild(btn);
+});
       // Render right column (meanings)
       const rightCol = document.getElementById('right-column');
       rightCol.innerHTML = '';
