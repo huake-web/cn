@@ -379,7 +379,7 @@
       chuer:    { name: "初二",    json: "jiaocai/chuer.json" },
       chusan:   { name: "初三",   json: "jiaocai/chusan.json" },
       gaoyi:    { name: "高一",    json: "jiaocai/gaoyi.json" },
-      gaoer:     { name: "高二",    json: "jiaocai/gaoer.json" },
+      gaoer:     { name: "高二",    json: "jiaocai/gaoer.json" }
 
     };
     const CHENGYU_LEVELS = {
@@ -389,11 +389,20 @@
       g1chengyu: { name: "高一成语", json: "jiaocai/g1chengyu.json" },
       g2chengyu: { name: "高二成语", json: "jiaocai/g2chengyu.json" }
     };
-       if (mode === '名句') {
-      // Show level selector
-      document.addEventListener("DOMContentLoaded", function() {
-        document.getElementById('level-selector').style.display = '';
+     let jsonFile, pageTitle;
+  if (mode === '名句') {
+    document.addEventListener("DOMContentLoaded", function() {
+      document.getElementById('level-selector').style.display = '';
+      // Fill options for 名句 only
+      const sel = document.getElementById('level-selector');
+      sel.innerHTML = '';
+      Object.entries(LEVELS).forEach(([key, val]) => {
+        const opt = document.createElement('option');
+        opt.value = key;
+        opt.textContent = val.name;
+        sel.appendChild(opt);
       });
+    });
     let levelKey = getParam('level', 'yubeiban');
     if (!LEVELS[levelKey]) levelKey = 'yubeiban';
     jsonFile = LEVELS[levelKey].json;
@@ -402,7 +411,6 @@
       document.getElementById('level-selector').value = levelKey;
       document.getElementById('main-title').textContent = pageTitle + " - " + LEVELS[levelKey].name;
     });
-    // Level change handler
     window.changeLevel = function() {
       const select = document.getElementById('level-selector');
       const newLevel = select.value;
@@ -412,27 +420,33 @@
       window.location.href = url;
     };
   } else if (mode === '成语') {
-      // Show chengyu level selector
-      document.addEventListener("DOMContentLoaded", function() {
-        document.getElementById('level-selector').style.display = '';
-        document.getElementById('main-title').textContent = '成语还原';
+    document.addEventListener("DOMContentLoaded", function() {
+      document.getElementById('level-selector').style.display = '';
+      document.getElementById('main-title').textContent = '成语还原';
+      // Fill options for 成语 only
+      const sel = document.getElementById('level-selector');
+      sel.innerHTML = '';
+      Object.entries(CHENGYU_LEVELS).forEach(([key, val]) => {
+        const opt = document.createElement('option');
+        opt.value = key;
+        opt.textContent = val.name;
+        sel.appendChild(opt);
       });
+    });
     let levelKey = getParam('level', 'f1chengyu');
-      if (!CHENGYU_LEVELS[levelKey]) levelKey = 'f1chengyu';
-      jsonFile = CHENGYU_LEVELS[levelKey].json;
-      pageTitle = '成语还原';
-      document.addEventListener("DOMContentLoaded", function() {
-        document.getElementById('level-selector').value = levelKey;
-      });
-      // Level change handler for chengyu
-      window.changeLevel = function() {
-        const select = document.getElementById('level-selector');
-        const newLevel = select.value;
-        let url = location.pathname + `?mode=成语&level=${newLevel}`;
-        window.location.href = url;
-      };
-    }
-
+    if (!CHENGYU_LEVELS[levelKey]) levelKey = 'f1chengyu';
+    jsonFile = CHENGYU_LEVELS[levelKey].json;
+    pageTitle = '成语还原';
+    document.addEventListener("DOMContentLoaded", function() {
+      document.getElementById('level-selector').value = levelKey;
+    });
+    window.changeLevel = function() {
+      const select = document.getElementById('level-selector');
+      const newLevel = select.value;
+      let url = location.pathname + `?mode=成语&level=${newLevel}`;
+      window.location.href = url;
+    };
+  }
   document.title = pageTitle;
    
 
