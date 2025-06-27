@@ -320,6 +320,16 @@
     <button class="button" onclick="location.href='index.html'">🏠 返回首页</button>
     <button class="button" onclick="restartGame()" style="margin-left:0.7em;">🔄 重新开始</button>
     <div class="main-title">🌟 预备班名句精华 🌈</div>
+    <div style="text-align:center; margin-bottom: 1rem;">
+  <label for="level-select" style="font-weight:bold;">选择难度：</label>
+  <select id="level-select" style="font-size:1rem; padding:0.2em 1em; border-radius:1em;">
+    <option value="all">全部</option>
+    <option value="0">简单</option>
+    <option value="1">中等</option>
+    <option value="2">困难</option>
+  </select>
+</div>
+<div id="current-level" style="text-align:center;color:#1976d2;font-size:1.1em;margin-bottom:0.3em;"></div>
     <div class="streaks-bar">
       <div class="streak-badge"><span class="label">当前连对：</span><span id="current-streak">0</span></div>
       <div class="streak-badge"><span class="label">最高连对：</span><span id="highest-streak">0</span></div>
@@ -354,12 +364,15 @@
       return /[\u4e00-\u9fa5A-Za-z]/.test(char);
     }
     let questions = [];
-
+let selectedLevel = "all";
     fetch('jiaocai/yubeiban.json')
       .then(res => res.json())
       .then(data => {
         questions = data;
         restartGame();
+         document.getElementById('level-select').addEventListener('change', function() {
+      selectedLevel = this.value;
+      restartGame();
       })
       .catch(err => {
         console.error("Failed to load questions:", err);
@@ -395,6 +408,10 @@
     }
 
     function restartGame() {
+        let pool = questions;
+  if (selectedLevel !== "all") {
+    pool = questions.filter(q => String(q.level) === selectedLevel);
+  }
       quiz = shuffle(questions).slice(0, 20);
       current = 0;
       userAnswers.length = 0;
@@ -420,6 +437,8 @@
       document.getElementById("feedback").innerHTML = "";
       renderQuestion();
       renderQuestionMap();
+       const levelNames = { "all": "全部", "0": "简单", "1": "中等", "2": "困难" };
+  document.getElementById("current-level").innerText = "难度：" + (levelNames[selectedLevel] || "全部");
     }
 
     function renderQuestion() {
