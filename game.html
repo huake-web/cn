@@ -370,6 +370,10 @@
       g1chengyu: { name: "高一成语", json: "jiaocai/g1chengyu.json" },
       g2chengyu: { name: "高二成语", json: "jiaocai/g2chengyu.json" }
     };
+
+    const FOOD_MODES = {
+  food: { name: "看图猜字", json: "jiaocai/food.json" }
+};
      document.addEventListener("DOMContentLoaded", function() {
   const mode = getParam('mode');
   if (!mode) {
@@ -420,6 +424,12 @@
           window.location.href = url;
         };
       }
+       else if (mode === 'food') {
+  pageTitle = getParam('title', '看图猜字');
+  document.getElementById('main-title').textContent = pageTitle;
+  jsonFile = FOOD_MODES.food.json;
+  document.getElementById('level-selector').style.display = 'none';
+}
       document.title = pageTitle;
     
       // --- Login check ---
