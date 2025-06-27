@@ -326,6 +326,9 @@
     <option value="chusan">初三</option>
     <option value="gaoyi">高一</option>
     <option value="gaoer">高二</option>
+       <!-- For 成语 levels -->
+      <option value="f1chengyu">基础成语</option>
+      <option value="f2chengyu">进阶成语</option>
   </select>
     <div class="main-title" id="main-title"></div>
     <div class="streaks-bar">
@@ -379,6 +382,18 @@
       gaoer:     { name: "高二",    json: "jiaocai/gaoer.json" },
 
     };
+    const CHENGYU_LEVELS = {
+      f1chengyu: { name: "初一成语", json: "jiaocai/f1chengyu.json" },
+      f2chengyu: { name: "初二成语", json: "jiaocai/f2chengyu.json" },
+      f3chengyu: { name: "初三成语", json: "jiaocai/f1chengyu.json" },
+      g1chengyu: { name: "高一成语", json: "jiaocai/f2chengyu.json" },
+      g2chengyu: { name: "高二成语", json: "jiaocai/f2chengyu.json" }
+    };
+       if (mode === '名句') {
+      // Show level selector
+      document.addEventListener("DOMContentLoaded", function() {
+        document.getElementById('level-selector').style.display = '';
+      });
     let levelKey = getParam('level', 'yubeiban');
     if (!LEVELS[levelKey]) levelKey = 'yubeiban';
     jsonFile = LEVELS[levelKey].json;
@@ -397,15 +412,26 @@
       window.location.href = url;
     };
   } else if (mode === '成语') {
-    // Hide level selector
-    document.addEventListener("DOMContentLoaded", function() {
-      document.getElementById('level-selector').style.display = 'none';
-      document.getElementById('main-title').textContent = '成语还原';
-    });
-    // Set your chengyu question bank here:
-    jsonFile = 'jiaocai/f1chengyu.json'; // Change this if needed
-    pageTitle = '成语还原';
-  }
+      // Show chengyu level selector
+      document.addEventListener("DOMContentLoaded", function() {
+        document.getElementById('level-selector').style.display = '';
+        document.getElementById('main-title').textContent = '成语还原';
+      });
+    let levelKey = getParam('level', 'f1chengyu');
+      if (!CHENGYU_LEVELS[levelKey]) levelKey = 'f1chengyu';
+      jsonFile = CHENGYU_LEVELS[levelKey].json;
+      pageTitle = '成语还原';
+      document.addEventListener("DOMContentLoaded", function() {
+        document.getElementById('level-selector').value = levelKey;
+      });
+      // Level change handler for chengyu
+      window.changeLevel = function() {
+        const select = document.getElementById('level-selector');
+        const newLevel = select.value;
+        let url = location.pathname + `?mode=成语&level=${newLevel}`;
+        window.location.href = url;
+      };
+    }
 
   document.title = pageTitle;
    
