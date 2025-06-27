@@ -319,6 +319,15 @@
   <div class="container">
     <button class="button" onclick="location.href='index.html'">🏠 返回首页</button>
     <button class="button" onclick="restartGame()" style="margin-left:0.7em;">🔄 重新开始</button>
+    <select id="level-selector" class="button" style="margin-left:0.7em; font-size:1em; display:none;" onchange="changeLevel()">
+    <option value="yubeiban">预备班</option>
+    <option value="chuyi">初一</option>
+    <option value="chuer">初二</option>
+    <option value="chusan">初三</option>
+    <option value="gaoyi">高一</option>
+    <option value="gaor">高二</option>
+    <option value="gaosan">高三</option>
+  </select>
     <div class="main-title" id="main-title"></div>
     <div class="streaks-bar">
       <div class="streak-badge"><span class="label">当前连对：</span><span id="current-streak">0</span></div>
@@ -350,11 +359,57 @@
       const match = location.search.match(new RegExp(`[?&]${name}=([^&]+)`));
       return match ? decodeURIComponent(match[1]) : def;
     }
-    // Use URL parameters for title/json
-    const pageTitle = getParam('title', '默认游戏名');
-    const jsonFile = getParam('json', 'jiaocai/yubeiban.json');
-    document.title = pageTitle;
-    document.getElementById('main-title').textContent = pageTitle;
+  
+    // Mode: "名句" (名句还原, default) or "成语"
+  const mode = getParam('mode', '名句');
+// Level logic only for 名句还原
+  let jsonFile, pageTitle;
+  if (mode === '名句') {
+    // Show level selector
+    document.addEventListener("DOMContentLoaded", function() {
+      document.getElementById('level-selector').style.display = '';
+    });
+
+    // Level mapping
+    const LEVELS = {
+      yubeiban: { name: "预备班", json: "jiaocai/yubeiban.json" },
+      chuyi:    { name: "初一",    json: "jiaocai/chuyi.json" },
+      chuer:    { name: "初二",    json: "jiaocai/chuer.json" },
+      chusan:   { name: "初三",   json: "jiaocai/chusan.json" },
+      gaoyi:    { name: "高一",    json: "jiaocai/gaoyi.json" },
+      gaor:     { name: "高二",    json: "jiaocai/gaor.json" },
+      gaosan:   { name: "高三",   json: "jiaocai/gaosan.json" }
+    };
+    let levelKey = getParam('level', 'yubeiban');
+    if (!LEVELS[levelKey]) levelKey = 'yubeiban';
+    jsonFile = LEVELS[levelKey].json;
+    pageTitle = getParam('title', '名句还原');
+    document.addEventListener("DOMContentLoaded", function() {
+      document.getElementById('level-selector').value = levelKey;
+      document.getElementById('main-title').textContent = pageTitle + " - " + LEVELS[levelKey].name;
+    });
+    // Level change handler
+    window.changeLevel = function() {
+      const select = document.getElementById('level-selector');
+      const newLevel = select.value;
+      let url = location.pathname + `?mode=名句&level=${newLevel}`;
+      const titleParam = getParam('title', '');
+      if (titleParam) url += `&title=${encodeURIComponent(titleParam)}`;
+      window.location.href = url;
+    };
+  } else if (mode === '成语') {
+    // Hide level selector
+    document.addEventListener("DOMContentLoaded", function() {
+      document.getElementById('level-selector').style.display = 'none';
+      document.getElementById('main-title').textContent = '成语还原';
+    });
+    // Set your chengyu question bank here:
+    jsonFile = 'jiaocai/chengyu.json'; // Change this if needed
+    pageTitle = '成语还原';
+  }
+
+  document.title = pageTitle;
+   
 
     // Login check, sessionStorage only (per tab)
     if (sessionStorage.getItem('isLoggedIn') !== 'true') {
