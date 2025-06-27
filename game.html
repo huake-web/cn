@@ -371,7 +371,11 @@
       g2chengyu: { name: "高二成语", json: "jiaocai/g2chengyu.json" }
     };
      document.addEventListener("DOMContentLoaded", function() {
-      const mode = getParam('mode', '名句');
+  const mode = getParam('mode');
+  if (!mode) {
+    alert("未指定游戏模式，无法加载。请从主菜单进入。");
+    return;
+  }
       let jsonFile, pageTitle;
       const sel = document.getElementById('level-selector');
       sel.innerHTML = '';
