@@ -379,413 +379,417 @@
       g1chengyu: { name: "高一成语", json: "jiaocai/g1chengyu.json" },
       g2chengyu: { name: "高二成语", json: "jiaocai/g2chengyu.json" }
     };
-     const mode = getParam('mode', '名句');
-     let jsonFile, pageTitle;
-      document.addEventListener("DOMContentLoaded", function() {
-    const sel = document.getElementById('level-selector');
-    sel.innerHTML = '';
-
-  if (mode === '名句') {
-      document.getElementById('level-selector').style.display = '';
-      Object.entries(LEVELS).forEach(([key, val]) => {
-        const opt = document.createElement('option');
-        opt.value = key;
-        opt.textContent = val.name;
-        sel.appendChild(opt);
-      });
-      let levelKey = getParam('level', 'yubeiban');
-      if (!LEVELS[levelKey]) levelKey = 'yubeiban';
-      sel.value = levelKey;
-      pageTitle = getParam('title', '名句还原');
-      document.getElementById('main-title').textContent = pageTitle + " - " + LEVELS[levelKey].name;
-      jsonFile = LEVELS[levelKey].json;
-      window.changeLevel = function() {
-        const newLevel = sel.value;
-        let url = location.pathname + `?mode=名句&level=${newLevel}`;
-        const titleParam = getParam('title', '');
-        if (titleParam) url += `&title=${encodeURIComponent(titleParam)}`;
-        window.location.href = url;
-      };
-    } else if (mode === '成语') {
-      document.getElementById('level-selector').style.display = '';
-      Object.entries(CHENGYU_LEVELS).forEach(([key, val]) => {
-        const opt = document.createElement('option');
-        opt.value = key;
-        opt.textContent = val.name;
-        sel.appendChild(opt);
-      });
-      let levelKey = getParam('level', 'f1chengyu');
-      if (!CHENGYU_LEVELS[levelKey]) levelKey = 'f1chengyu';
-      sel.value = levelKey;
-      pageTitle = '成语还原';
-      document.getElementById('main-title').textContent = pageTitle + " - " + CHENGYU_LEVELS[levelKey].name;
-      jsonFile = CHENGYU_LEVELS[levelKey].json;
-      window.changeLevel = function() {
-        const newLevel = sel.value;
-        let url = location.pathname + `?mode=成语&level=${newLevel}`;
-        window.location.href = url;
-      };
-    }
-    document.title = pageTitle;
-  });
+     document.addEventListener("DOMContentLoaded", function() {
+      const mode = getParam('mode', '名句');
+      let jsonFile, pageTitle;
+      const sel = document.getElementById('level-selector');
+      sel.innerHTML = '';
+   if (mode === '名句') {
+        sel.style.display = '';
+        Object.entries(LEVELS).forEach(([key, val]) => {
+          const opt = document.createElement('option');
+          opt.value = key;
+          opt.textContent = val.name;
+          sel.appendChild(opt);
+        });
+        let levelKey = getParam('level', 'yubeiban');
+        if (!LEVELS[levelKey]) levelKey = 'yubeiban';
+        sel.value = levelKey;
+        pageTitle = getParam('title', '名句还原');
+        document.getElementById('main-title').textContent = pageTitle + " - " + LEVELS[levelKey].name;
+        jsonFile = LEVELS[levelKey].json;
+        window.changeLevel = function() {
+          const newLevel = sel.value;
+          let url = location.pathname + `?mode=名句&level=${newLevel}`;
+          const titleParam = getParam('title', '');
+          if (titleParam) url += `&title=${encodeURIComponent(titleParam)}`;
+          window.location.href = url;
+        };
+      } else if (mode === '成语') {
+        sel.style.display = '';
+        Object.entries(CHENGYU_LEVELS).forEach(([key, val]) => {
+          const opt = document.createElement('option');
+          opt.value = key;
+          opt.textContent = val.name;
+          sel.appendChild(opt);
+        });
+        let levelKey = getParam('level', 'f1chengyu');
+        if (!CHENGYU_LEVELS[levelKey]) levelKey = 'f1chengyu';
+        sel.value = levelKey;
+        pageTitle = '成语还原';
+        document.getElementById('main-title').textContent = pageTitle + " - " + CHENGYU_LEVELS[levelKey].name;
+        jsonFile = CHENGYU_LEVELS[levelKey].json;
+        window.changeLevel = function() {
+          const newLevel = sel.value;
+          let url = location.pathname + `?mode=成语&level=${newLevel}`;
+          window.location.href = url;
+        };
+      }
+      document.title = pageTitle;
     
-    // Login check, sessionStorage only (per tab)
-    if (sessionStorage.getItem('isLoggedIn') !== 'true') {
-      window.location.href = 'login.html';
-    }
+      // --- Login check ---
+      if (sessionStorage.getItem('isLoggedIn') !== 'true') {
+        window.location.href = 'login.html';
+      }
 
-    function isStringChar(char) {
-      return /[\u4e00-\u9fa5A-Za-z]/.test(char);
-    }
-    let questions = [];
+      // --- Game Logic ---
+      function isStringChar(char) {
+        return /[\u4e00-\u9fa5A-Za-z]/.test(char);
+      }
 
-    fetch(jsonFile)
-      .then(res => res.json())
-      .then(data => {
-        questions = data;
-        restartGame();
-      })
-      .catch(err => {
-        console.error("Failed to load questions:", err);
-        document.getElementById("question").innerText = "题库加载失败，请稍后重试。";
-      });
+      let questions = [];
+      let quiz = [];
+      let current = 0;
+      const userAnswers = [];
+      const shuffledChoices = [];
+      const hintsUsed = [];
+      const submitted = [];
+      const revealed = [];
+      const feedbackMsg = [];
+      const firstSubmissions = [];
+      let currentStreak = 0;
+      let highestStreak = 0;
 
-    let quiz = [];
-    let current = 0;
-    const userAnswers = [];
-    const shuffledChoices = [];
-    const hintsUsed = [];
-    const submitted = [];
-    const revealed = [];
-    const feedbackMsg = [];
-    const firstSubmissions = [];
+      function updateStreakDisplay() {
+        document.getElementById('current-streak').textContent = currentStreak;
+        document.getElementById('highest-streak').textContent = highestStreak;
+      }
+      function shuffle(arr) {
+        return [...arr].sort(() => Math.random() - 0.5);
+      }
+      function getOtherChars(count, exclude) {
+        const allChars = questions.flatMap(q => q.answer.split("").filter(isStringChar));
+        const unique = [...new Set(allChars.filter(c => !exclude.includes(c)))];
+        return shuffle(unique).slice(0, count);
+      }
+      function restartGame() {
+        quiz = shuffle(questions).slice(0, 20);
+        current = 0;
+        userAnswers.length = 0;
+        shuffledChoices.length = 0;
+        hintsUsed.length = 0;
+        submitted.length = 0;
+        revealed.length = 0;
+        feedbackMsg.length = 0;
+        firstSubmissions.length = 0;
+        currentStreak = 0;
+        highestStreak = 0;
+        updateStreakDisplay();
+        for (let q of quiz) {
+          const chars = q.answer.split("");
+          const stringChars = chars.filter(isStringChar);
 
-    // Streaks
-    let currentStreak = 0;
-    let highestStreak = 0;
-
-    function updateStreakDisplay() {
-      document.getElementById('current-streak').textContent = currentStreak;
-      document.getElementById('highest-streak').textContent = highestStreak;
-    }
-
-    function shuffle(arr) {
-      return [...arr].sort(() => Math.random() - 0.5);
-    }
-    function getOtherChars(count, exclude) {
-      const allChars = questions.flatMap(q => q.answer.split("").filter(isStringChar));
-      const unique = [...new Set(allChars.filter(c => !exclude.includes(c)))];
-      return shuffle(unique).slice(0, count);
-    }
-
-    function restartGame() {
-  quiz = shuffle(questions).slice(0, 20);
-  current = 0;
-  userAnswers.length = 0;
-  shuffledChoices.length = 0;
-  hintsUsed.length = 0;
-  submitted.length = 0;
-  revealed.length = 0;
-  feedbackMsg.length = 0;
-  firstSubmissions.length = 0;
-  currentStreak = 0;
-  highestStreak = 0;
-  updateStreakDisplay();
-  for (let q of quiz) {
-  const chars = q.answer.split("");
-  const stringChars = chars.filter(isStringChar);
-
-  let choices;
-  if (q.bank && Array.isArray(q.bank) && q.bank.length > 0) {
-    // Use the custom word bank, but ensure answer chars are included
-    const allChoices = Array.from(new Set([...stringChars, ...q.bank]));
-    choices = shuffle(allChoices);
-  } else {
-    // Default logic
-    let extraCount = stringChars.length;
-    if (jsonFile.includes('jiaocai/food.json')) {
-      extraCount = stringChars.length * 2;
-    }
-    const extras = getOtherChars(extraCount, stringChars);
-    choices = shuffle([...stringChars, ...extras]);
-  }
-
-  shuffledChoices.push(choices);
-  hintsUsed.push([]);
-  revealed.push([]);
-  feedbackMsg.push("");
-  firstSubmissions.push(undefined);
-}
-    document.getElementById("feedback").innerHTML = "";
-  renderQuestion();
-  renderQuestionMap();
-}
-
-    function renderQuestion() {
-      const q = quiz[current];
-      const questionEl = document.getElementById("question");
-      const answerArea = document.getElementById("answer-area");
-      const wordBank = document.getElementById("word-bank");
-      const feedback = document.getElementById("feedback");
-      feedback.innerHTML = feedbackMsg[current] || "";
-      questionEl.innerHTML = `<strong>题目 ${current + 1}：</strong> ${q.meaning}`;
-      answerArea.innerHTML = "";
-      wordBank.innerHTML = "";
-
-      const chars = q.answer.split("");
-      const stringChars = chars.filter(isStringChar);
-
-      let selected = Array.isArray(userAnswers[current]) ? userAnswers[current].slice() : [];
-      while (selected.length < stringChars.length) selected.push("");
-      userAnswers[current] = selected.slice();
-
-      // Draw answer slots
-      let slotStringCharIdx = 0;
-      for (let i = 0; i < chars.length; i++) {
-        if (!isStringChar(chars[i])) {
-          const slot = document.createElement("button");
-          slot.className = "slot-button";
-          slot.textContent = chars[i];
-          slot.disabled = true;
-          answerArea.appendChild(slot);
-        } else {
-          const slot = document.createElement("button");
-          slot.className = "slot-button";
-          slot.textContent = selected[slotStringCharIdx] || "";
-          const isHint = hintsUsed[current].includes(slotStringCharIdx);
-          const isReveal = revealed[current] && revealed[current].includes(slotStringCharIdx);
-          if (isHint) {
-            slot.disabled = true;
-            slot.style.backgroundColor = "#b6fcd5";
-          } else if (isReveal) {
-            slot.disabled = true;
-            slot.style.backgroundColor = "#add8e6";
-          } else if (submitted[current]) {
-            slot.disabled = true;
+          let choices;
+          if (q.bank && Array.isArray(q.bank) && q.bank.length > 0) {
+            // Use the custom word bank, but ensure answer chars are included
+            const allChoices = Array.from(new Set([...stringChars, ...q.bank]));
+            choices = shuffle(allChoices);
           } else {
-            const thisIdx = slotStringCharIdx;
-            slot.onclick = () => {
-              if (slot.textContent) {
-                selected[thisIdx] = "";
+            // Default logic
+            let extraCount = stringChars.length;
+            if (jsonFile.includes('jiaocai/food.json')) {
+              extraCount = stringChars.length * 2;
+            }
+            const extras = getOtherChars(extraCount, stringChars);
+            choices = shuffle([...stringChars, ...extras]);
+          }
+
+          shuffledChoices.push(choices);
+          hintsUsed.push([]);
+          revealed.push([]);
+          feedbackMsg.push("");
+          firstSubmissions.push(undefined);
+        }
+        document.getElementById("feedback").innerHTML = "";
+        renderQuestion();
+        renderQuestionMap();
+      }
+
+      function renderQuestion() {
+        const q = quiz[current];
+        const questionEl = document.getElementById("question");
+        const answerArea = document.getElementById("answer-area");
+        const wordBank = document.getElementById("word-bank");
+        const feedback = document.getElementById("feedback");
+        feedback.innerHTML = feedbackMsg[current] || "";
+        questionEl.innerHTML = `<strong>题目 ${current + 1}：</strong> ${q.meaning}`;
+        answerArea.innerHTML = "";
+        wordBank.innerHTML = "";
+
+        const chars = q.answer.split("");
+        const stringChars = chars.filter(isStringChar);
+
+        let selected = Array.isArray(userAnswers[current]) ? userAnswers[current].slice() : [];
+        while (selected.length < stringChars.length) selected.push("");
+        userAnswers[current] = selected.slice();
+
+        // Draw answer slots
+        let slotStringCharIdx = 0;
+        for (let i = 0; i < chars.length; i++) {
+          if (!isStringChar(chars[i])) {
+            const slot = document.createElement("button");
+            slot.className = "slot-button";
+            slot.textContent = chars[i];
+            slot.disabled = true;
+            answerArea.appendChild(slot);
+          } else {
+            const slot = document.createElement("button");
+            slot.className = "slot-button";
+            slot.textContent = selected[slotStringCharIdx] || "";
+            const isHint = hintsUsed[current].includes(slotStringCharIdx);
+            const isReveal = revealed[current] && revealed[current].includes(slotStringCharIdx);
+            if (isHint) {
+              slot.disabled = true;
+              slot.style.backgroundColor = "#b6fcd5";
+            } else if (isReveal) {
+              slot.disabled = true;
+              slot.style.backgroundColor = "#add8e6";
+            } else if (submitted[current]) {
+              slot.disabled = true;
+            } else {
+              const thisIdx = slotStringCharIdx;
+              slot.onclick = () => {
+                if (slot.textContent) {
+                  selected[thisIdx] = "";
+                  userAnswers[current] = selected.slice();
+                  renderQuestion();
+                }
+              };
+            }
+            answerArea.appendChild(slot);
+            slotStringCharIdx++;
+          }
+        }
+
+        // Frequency count in pool
+        const poolCount = {};
+        for (const c of shuffledChoices[current]) {
+          if (!isStringChar(c)) continue;
+          poolCount[c] = (poolCount[c] || 0) + 1;
+        }
+        const usedCount = {};
+        for (let i = 0; i < selected.length; i++) {
+          if (selected[i]) {
+            usedCount[selected[i]] = (usedCount[selected[i]] || 0) + 1;
+          }
+        }
+        for (const idx of hintsUsed[current]) {
+          const hintChar = stringChars[idx];
+          usedCount[hintChar] = (usedCount[hintChar] || 0) + 1;
+        }
+        if (revealed[current]) {
+          for (const idx of revealed[current]) {
+            const revealChar = stringChars[idx];
+            usedCount[revealChar] = (usedCount[revealChar] || 0) + 1;
+          }
+        }
+        const bankCharCount = {};
+        for (const char of shuffledChoices[current]) {
+          if (!isStringChar(char)) continue;
+          bankCharCount[char] = (bankCharCount[char] || 0) + 1;
+          const used = usedCount[char] || 0;
+          if (bankCharCount[char] <= poolCount[char] - used) {
+            if (submitted[current]) continue;
+            const btn = document.createElement("button");
+            btn.className = "word-button";
+            btn.textContent = char;
+            btn.onclick = () => {
+              let idx = selected.findIndex(v => !v);
+              if (idx !== -1) {
+                selected[idx] = char;
                 userAnswers[current] = selected.slice();
                 renderQuestion();
               }
             };
-          }
-          answerArea.appendChild(slot);
-          slotStringCharIdx++;
-        }
-      }
-
-      // Frequency count in pool
-      const poolCount = {};
-      for (const c of shuffledChoices[current]) {
-        if (!isStringChar(c)) continue;
-        poolCount[c] = (poolCount[c] || 0) + 1;
-      }
-      const usedCount = {};
-      for (let i = 0; i < selected.length; i++) {
-        if (selected[i]) {
-          usedCount[selected[i]] = (usedCount[selected[i]] || 0) + 1;
-        }
-      }
-      for (const idx of hintsUsed[current]) {
-        const hintChar = stringChars[idx];
-        usedCount[hintChar] = (usedCount[hintChar] || 0) + 1;
-      }
-      if (revealed[current]) {
-        for (const idx of revealed[current]) {
-          const revealChar = stringChars[idx];
-          usedCount[revealChar] = (usedCount[revealChar] || 0) + 1;
-        }
-      }
-      const bankCharCount = {};
-      for (const char of shuffledChoices[current]) {
-        if (!isStringChar(char)) continue;
-        bankCharCount[char] = (bankCharCount[char] || 0) + 1;
-        const used = usedCount[char] || 0;
-        if (bankCharCount[char] <= poolCount[char] - used) {
-          if (submitted[current]) continue;
-          const btn = document.createElement("button");
-          btn.className = "word-button";
-          btn.textContent = char;
-          btn.onclick = () => {
-            let idx = selected.findIndex(v => !v);
-            if (idx !== -1) {
-              selected[idx] = char;
-              userAnswers[current] = selected.slice();
-              renderQuestion();
-            }
-          };
-          wordBank.appendChild(btn);
-        }
-      }
-
-      // Hint info and button
-      const hintBtn = document.getElementById("hint-btn");
-      const hintInfo = document.getElementById("hint-info");
-      const remainingHints = Math.max(0, 3 - hintsUsed[current].length);
-      hintBtn.disabled = remainingHints <= 0 || isAnswerComplete() || submitted[current];
-      hintInfo.textContent = `剩余提示：${remainingHints} 次`;
-
-      // Submit button state
-      const submitBtn = document.getElementById("submit-btn");
-      if (submitted[current]) {
-        submitBtn.disabled = true;
-        submitBtn.textContent = "已提交";
-      } else {
-        submitBtn.disabled = false;
-        submitBtn.textContent = "提交";
-      }
-
-      document.getElementById("prev-btn").disabled = (current === 0);
-
-      const nextBtn = document.getElementById("next-btn");
-      if (current === quiz.length - 1) {
-        nextBtn.style.display = "none";
-      } else {
-        nextBtn.style.display = "";
-        nextBtn.disabled = false;
-      }
-
-      updateProgress();
-      renderQuestionMap();
-      updateStreakDisplay();
-    }
-
-    function renderQuestionMap() {
-      const map = document.getElementById('question-map');
-      map.innerHTML = '';
-      let correctCount = 0;
-      for (let i = 0; i < quiz.length; i++) {
-        let status = '';
-        if (submitted[i]) {
-          const user = typeof firstSubmissions[i] !== 'undefined' ? firstSubmissions[i] : '';
-          const correct = quiz[i].answer.split("").filter(isStringChar).join("");
-          if (user === correct) {
-            status = 'correct';
-            correctCount++;
-          } else {
-            status = 'incorrect';
+            wordBank.appendChild(btn);
           }
         }
-        const btn = document.createElement('button');
-        btn.className = 'question-map-btn' + (status ? ' ' + status : '') + (i === current ? ' active' : '');
-        btn.textContent = i + 1;
-        btn.onclick = () => {
-          current = i;
-          renderQuestion();
-        };
-        map.appendChild(btn);
-      }
-      // Score badge
-      const total = quiz.length;
-      const score = document.createElement('span');
-      score.className = 'score-badge';
-      score.innerHTML = `得分：${correctCount} / ${total}`;
-      map.appendChild(score);
-    }
 
-    function useHint() {
-      if (submitted[current]) return;
-      const q = quiz[current];
-      const stringChars = q.answer.split("").filter(isStringChar);
-      let selected = Array.isArray(userAnswers[current]) ? userAnswers[current].slice() : [];
-      while (selected.length < stringChars.length) selected.push("");
-      const eligible = [];
-      for (let i = 0; i < stringChars.length; i++) {
-        if (hintsUsed[current].includes(i)) continue;
-        if (revealed[current] && revealed[current].includes(i)) continue;
-        if (selected[i] === stringChars[i]) continue;
-        eligible.push(i);
-      }
-      if (eligible.length === 0) return;
-      const idx = eligible[Math.floor(Math.random() * eligible.length)];
-      hintsUsed[current].push(idx);
-      selected[idx] = stringChars[idx];
-      userAnswers[current] = selected.slice();
-      renderQuestion();
-    }
+        // Hint info and button
+        const hintBtn = document.getElementById("hint-btn");
+        const hintInfo = document.getElementById("hint-info");
+        const remainingHints = Math.max(0, 3 - hintsUsed[current].length);
+        hintBtn.disabled = remainingHints <= 0 || isAnswerComplete() || submitted[current];
+        hintInfo.textContent = `剩余提示：${remainingHints} 次`;
 
-    function isAnswerComplete() {
-      const q = quiz[current];
-      const chars = q.answer.split("").filter(isStringChar);
-      let selected = Array.isArray(userAnswers[current]) ? userAnswers[current] : [];
-      while (selected.length < chars.length) selected.push("");
-      return selected.length >= chars.length &&
-        selected.every((c, i) =>
-          c === chars[i] ||
-          (hintsUsed[current] && hintsUsed[current].includes(i)) ||
-          (revealed[current] && revealed[current].includes(i))
-        );
-    }
-
-    function submitAnswer() {
-      const feedback = document.getElementById("feedback");
-      const selected = Array.isArray(userAnswers[current]) ? userAnswers[current].slice() : [];
-      const user = selected.join("");
-      const correct = quiz[current].answer.split("").filter(isStringChar).join("");
-
-      // Only store the first submission
-      if (typeof firstSubmissions[current] === 'undefined') {
-        firstSubmissions[current] = user;
-      }
-
-      const isCorrect = user === correct;
-
-      // Streaks logic
-      if (typeof submitted[current] === 'undefined' || !submitted[current]) {
-        if (isCorrect) {
-          currentStreak += 1;
-          if (currentStreak > highestStreak) {
-            highestStreak = currentStreak;
-          }
+        // Submit button state
+        const submitBtn = document.getElementById("submit-btn");
+        if (submitted[current]) {
+          submitBtn.disabled = true;
+          submitBtn.textContent = "已提交";
         } else {
-          currentStreak = 0;
+          submitBtn.disabled = false;
+          submitBtn.textContent = "提交";
         }
+
+        document.getElementById("prev-btn").disabled = (current === 0);
+
+        const nextBtn = document.getElementById("next-btn");
+        if (current === quiz.length - 1) {
+          nextBtn.style.display = "none";
+        } else {
+          nextBtn.style.display = "";
+          nextBtn.disabled = false;
+        }
+
+        updateProgress();
+        renderQuestionMap();
         updateStreakDisplay();
       }
 
-      if (isCorrect) {
-        feedbackMsg[current] = `<span class="correct">答对了！</span>`;
-        revealed[current] = [];
-      } else {
-        feedbackMsg[current] = `<span class="incorrect">答错了！</span> 正确答案已填入。`;
-        const correctChars = correct.split("");
-        userAnswers[current] = correctChars.slice();
-        revealed[current] = correctChars.map((_, i) => i);
+      function renderQuestionMap() {
+        const map = document.getElementById('question-map');
+        map.innerHTML = '';
+        let correctCount = 0;
+        for (let i = 0; i < quiz.length; i++) {
+          let status = '';
+          if (submitted[i]) {
+            const user = typeof firstSubmissions[i] !== 'undefined' ? firstSubmissions[i] : '';
+            const correct = quiz[i].answer.split("").filter(isStringChar).join("");
+            if (user === correct) {
+              status = 'correct';
+              correctCount++;
+            } else {
+              status = 'incorrect';
+            }
+          }
+          const btn = document.createElement('button');
+          btn.className = 'question-map-btn' + (status ? ' ' + status : '') + (i === current ? ' active' : '');
+          btn.textContent = i + 1;
+          btn.onclick = () => {
+            current = i;
+            renderQuestion();
+          };
+          map.appendChild(btn);
+        }
+        // Score badge
+        const total = quiz.length;
+        const score = document.createElement('span');
+        score.className = 'score-badge';
+        score.innerHTML = `得分：${correctCount} / ${total}`;
+        map.appendChild(score);
       }
 
-      submitted[current] = true;
-      renderQuestion();
-    }
-
-    function nextQuestion() {
-      if (current < quiz.length - 1) {
-        current++;
+      function useHint() {
+        if (submitted[current]) return;
+        const q = quiz[current];
+        const stringChars = q.answer.split("").filter(isStringChar);
+        let selected = Array.isArray(userAnswers[current]) ? userAnswers[current].slice() : [];
+        while (selected.length < stringChars.length) selected.push("");
+        const eligible = [];
+        for (let i = 0; i < stringChars.length; i++) {
+          if (hintsUsed[current].includes(i)) continue;
+          if (revealed[current] && revealed[current].includes(i)) continue;
+          if (selected[i] === stringChars[i]) continue;
+          eligible.push(i);
+        }
+        if (eligible.length === 0) return;
+        const idx = eligible[Math.floor(Math.random() * eligible.length)];
+        hintsUsed[current].push(idx);
+        selected[idx] = stringChars[idx];
+        userAnswers[current] = selected.slice();
         renderQuestion();
       }
-    }
 
-    function prevQuestion() {
-      if (current > 0) {
-        current--;
+      function isAnswerComplete() {
+        const q = quiz[current];
+        const chars = q.answer.split("").filter(isStringChar);
+        let selected = Array.isArray(userAnswers[current]) ? userAnswers[current] : [];
+        while (selected.length < chars.length) selected.push("");
+        return selected.length >= chars.length &&
+          selected.every((c, i) =>
+            c === chars[i] ||
+            (hintsUsed[current] && hintsUsed[current].includes(i)) ||
+            (revealed[current] && revealed[current].includes(i))
+          );
+      }
+
+      function submitAnswer() {
+        const feedback = document.getElementById("feedback");
+        const selected = Array.isArray(userAnswers[current]) ? userAnswers[current].slice() : [];
+        const user = selected.join("");
+        const correct = quiz[current].answer.split("").filter(isStringChar).join("");
+
+        // Only store the first submission
+        if (typeof firstSubmissions[current] === 'undefined') {
+          firstSubmissions[current] = user;
+        }
+
+        const isCorrect = user === correct;
+
+        // Streaks logic
+        if (typeof submitted[current] === 'undefined' || !submitted[current]) {
+          if (isCorrect) {
+            currentStreak += 1;
+            if (currentStreak > highestStreak) {
+              highestStreak = currentStreak;
+            }
+          } else {
+            currentStreak = 0;
+          }
+          updateStreakDisplay();
+        }
+
+        if (isCorrect) {
+          feedbackMsg[current] = `<span class="correct">答对了！</span>`;
+          revealed[current] = [];
+        } else {
+          feedbackMsg[current] = `<span class="incorrect">答错了！</span> 正确答案已填入。`;
+          const correctChars = correct.split("");
+          userAnswers[current] = correctChars.slice();
+          revealed[current] = correctChars.map((_, i) => i);
+        }
+
+        submitted[current] = true;
         renderQuestion();
       }
-    }
 
-    function updateProgress() {
-      const pct = ((current + 1) / quiz.length) * 100;
-      document.getElementById("progress").style.width = pct + "%";
-      const container = document.querySelector('.progress-bar-container');
-      const watermark = document.getElementById("progress-watermark");
-      if (!container || !watermark) return;
-      const containerWidth = container.offsetWidth;
-      const watermarkWidth = watermark.offsetWidth;
-      let left = (containerWidth * pct / 100);
-      left = Math.max(watermarkWidth / 2, Math.min(left, containerWidth - watermarkWidth / 2));
-      watermark.style.left = (left - watermarkWidth / 2) + "px";
-    }
+      function nextQuestion() {
+        if (current < quiz.length - 1) {
+          current++;
+          renderQuestion();
+        }
+      }
+
+      function prevQuestion() {
+        if (current > 0) {
+          current--;
+          renderQuestion();
+        }
+      }
+
+      function updateProgress() {
+        const pct = ((current + 1) / quiz.length) * 100;
+        document.getElementById("progress").style.width = pct + "%";
+        const container = document.querySelector('.progress-bar-container');
+        const watermark = document.getElementById("progress-watermark");
+        if (!container || !watermark) return;
+        const containerWidth = container.offsetWidth;
+        const watermarkWidth = watermark.offsetWidth;
+        let left = (containerWidth * pct / 100);
+        left = Math.max(watermarkWidth / 2, Math.min(left, containerWidth - watermarkWidth / 2));
+        watermark.style.left = (left - watermarkWidth / 2) + "px";
+      }
+
+      // --- Fetch questions and start game ---
+      fetch(jsonFile)
+        .then(res => res.json())
+        .then(data => {
+          questions = data;
+          restartGame();
+        })
+        .catch(err => {
+          console.error("Failed to load questions:", err);
+          document.getElementById("question").innerText = "题库加载失败，请稍后重试。";
+        });
+
+      // Expose game controls for html buttons
+      window.restartGame = restartGame;
+      window.prevQuestion = prevQuestion;
+      window.nextQuestion = nextQuestion;
+      window.useHint = useHint;
+      window.submitAnswer = submitAnswer;
+    });
   </script>
 </body>
 </html>
