@@ -3,8 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
- <title id="page-title"></title>
-<!-- <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet"> -->
+  <title id="page-title"></title>
   <style>
     body {
       font-family: 'ZCOOL KuaiLe', 'Comic Sans MS', cursive, sans-serif;
@@ -33,6 +32,23 @@
       background: rgba(255,255,255,0.95);
       border-radius: 2rem;
       box-shadow: 0 12px 32px 0 rgba(255,192,203,0.15), 0 1.5px 8px 0 rgba(135,206,250,0.12);
+    }
+    .level-difficulty-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 0.5em;
+      margin-bottom: 0.8em;
+      float: right;
+    }
+    @media (max-width: 600px) {
+      .container { padding: 0.6rem 0.2rem 1.2rem 0.2rem; }
+      .main-title { font-size: 1.28rem; }
+      .score-badge { font-size: 0.98em; padding: 0.10em 0.6em; }
+      .progress-watermark { height: 32px; width: 32px; }
+      .question-map-btn { width: 1.5em; height: 1.5em; font-size: 1em; }
+      .streak-badge { font-size: 0.95em; padding: 0.13em 0.8em;}
+      .level-difficulty-wrapper { font-size: 0.95em; margin-bottom: 0.3em;}
     }
     .main-title {
       text-align: center;
@@ -292,9 +308,9 @@
       box-shadow: 0 0 9px #90caf9;
       border: 2px solid #42a5f5;
     }
-     #feedback {
-  text-align: center;
-}
+    #feedback {
+      text-align: center;
+    }
     #feedback span {
       display: inline-block;
       animation: pop 0.45s cubic-bezier(.7,-0.45,.34,1.45);
@@ -304,14 +320,6 @@
       70% { transform: scale(1.25); opacity: 1;}
       100% { transform: scale(1); }
     }
-    @media (max-width: 600px) {
-      .container { padding: 0.6rem 0.2rem 1.2rem 0.2rem; }
-      .main-title { font-size: 1.28rem; }
-      .score-badge { font-size: 0.98em; padding: 0.10em 0.6em; }
-      .progress-watermark { height: 32px; width: 32px; }
-      .question-map-btn { width: 1.5em; height: 1.5em; font-size: 1em; }
-      .streak-badge { font-size: 0.95em; padding: 0.13em 0.8em;}
-    }
   </style>
 </head>
 <body>
@@ -319,8 +327,11 @@
   <div class="container">
     <button class="button" onclick="location.href='index.html'">🏠 返回首页</button>
     <button class="button" onclick="restartGame()" style="margin-left:0.7em;">🔄 重新开始</button>
-   <select id="level-selector" class="button" style="margin-left:0.7em; font-size:1em; display:none;" onchange="changeLevel()">
-  </select>
+    <div class="level-difficulty-wrapper">
+      <select id="level-selector" class="button" style="font-size:1em; display:none;" onchange="changeLevel()"></select>
+      <span id="current-difficulty" style="display:none; margin-left:0.6em; font-weight:bold; color:#7b1fa2;"></span>
+    </div>
+    <div style="clear:both"></div>
     <div class="main-title" id="main-title"></div>
     <div class="streaks-bar">
       <div class="streak-badge"><span class="label">当前连对：</span><span id="current-streak">0</span></div>
@@ -361,7 +372,6 @@
       chusan:   { name: "初三",   json: "jiaocai/chusan.json" },
       gaoyi:    { name: "高一",    json: "jiaocai/gaoyi.json" },
       gaoer:     { name: "高二",    json: "jiaocai/gaoer.json" }
-
     };
     const CHENGYU_LEVELS = {
       f1chengyu: { name: "初一成语", json: "jiaocai/f1chengyu.json" },
@@ -370,20 +380,20 @@
       g1chengyu: { name: "高一成语", json: "jiaocai/g1chengyu.json" },
       g2chengyu: { name: "高二成语", json: "jiaocai/g2chengyu.json" }
     };
-
     const FOOD_MODES = {
-  food: { name: "看图猜字", json: "jiaocai/food.json" }
-};
-     document.addEventListener("DOMContentLoaded", function() {
-  const mode = getParam('mode');
-  if (!mode) {
-    alert("未指定游戏模式，无法加载。请从主菜单进入。");
-    return;
-  }
+      food: { name: "看图猜字", json: "jiaocai/food.json" }
+    };
+    document.addEventListener("DOMContentLoaded", function() {
+      const mode = getParam('mode');
+      if (!mode) {
+        alert("未指定游戏模式，无法加载。请从主菜单进入。");
+        return;
+      }
       let jsonFile, pageTitle;
       const sel = document.getElementById('level-selector');
+      const diffSpan = document.getElementById('current-difficulty');
       sel.innerHTML = '';
-   if (mode === '名句') {
+      if (mode === '名句') {
         sel.style.display = '';
         Object.entries(LEVELS).forEach(([key, val]) => {
           const opt = document.createElement('option');
@@ -397,8 +407,11 @@
         pageTitle = getParam('title', '名句还原');
         document.getElementById('main-title').textContent = pageTitle + " - " + LEVELS[levelKey].name;
         jsonFile = LEVELS[levelKey].json;
+        diffSpan.textContent = '当前难度：' + LEVELS[levelKey].name;
+        diffSpan.style.display = '';
         window.changeLevel = function() {
           const newLevel = sel.value;
+          diffSpan.textContent = '当前难度：' + LEVELS[newLevel].name;
           let url = location.pathname + `?mode=名句&level=${newLevel}`;
           const titleParam = getParam('title', '');
           if (titleParam) url += `&title=${encodeURIComponent(titleParam)}`;
@@ -418,30 +431,31 @@
         pageTitle = '成语还原';
         document.getElementById('main-title').textContent = pageTitle + " - " + CHENGYU_LEVELS[levelKey].name;
         jsonFile = CHENGYU_LEVELS[levelKey].json;
+        diffSpan.textContent = '当前难度：' + CHENGYU_LEVELS[levelKey].name;
+        diffSpan.style.display = '';
         window.changeLevel = function() {
           const newLevel = sel.value;
+          diffSpan.textContent = '当前难度：' + CHENGYU_LEVELS[newLevel].name;
           let url = location.pathname + `?mode=成语&level=${newLevel}`;
           window.location.href = url;
         };
+      } else if (mode === 'food') {
+        pageTitle = getParam('title', '看图猜字');
+        document.getElementById('main-title').textContent = pageTitle;
+        jsonFile = FOOD_MODES.food.json;
+        sel.style.display = 'none';
+        diffSpan.style.display = 'none';
       }
-       else if (mode === 'food') {
-  pageTitle = getParam('title', '看图猜字');
-  document.getElementById('main-title').textContent = pageTitle;
-  jsonFile = FOOD_MODES.food.json;
-  document.getElementById('level-selector').style.display = 'none';
-}
       document.title = pageTitle;
-    
       // --- Login check ---
       if (sessionStorage.getItem('isLoggedIn') !== 'true') {
         window.location.href = 'login.html';
       }
 
-      // --- Game Logic ---
+      // --- Game Logic (unchanged below here) ---
       function isStringChar(char) {
         return /[\u4e00-\u9fa5A-Za-z]/.test(char);
       }
-
       let questions = [];
       let quiz = [];
       let current = 0;
