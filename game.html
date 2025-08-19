@@ -625,9 +625,17 @@
         }
 
         // Hint info and button
+       // const hintBtn = document.getElementById("hint-btn");
+       // const hintInfo = document.getElementById("hint-info");
+      //  const remainingHints = Math.max(0, 3 - hintsUsed[current].length);
+       // hintBtn.disabled = remainingHints <= 0 || isAnswerComplete() || submitted[current];
+       // hintInfo.textContent = `剩余提示：${remainingHints} 次`;
+
+                // Hint info and button
         const hintBtn = document.getElementById("hint-btn");
         const hintInfo = document.getElementById("hint-info");
-        const remainingHints = Math.max(0, 3 - hintsUsed[current].length);
+        const hintLimit = (mode === '成语') ? 2 : 3;
+        const remainingHints = Math.max(0, hintLimit - hintsUsed[current].length);
         hintBtn.disabled = remainingHints <= 0 || isAnswerComplete() || submitted[current];
         hintInfo.textContent = `剩余提示：${remainingHints} 次`;
 
